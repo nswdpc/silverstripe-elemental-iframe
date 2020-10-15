@@ -3,7 +3,7 @@
 <div class="outer<% if $IsResponsive %> responsive-iframe is-{$IsResponsive.XML}<% end_if %>">
         <% if $IsLazy %><noscript class="loading-lazy"><% end_if %>
             <iframe
-        <% if $AlternateContent %>title="{{$AlternateContent.XML}}"<% end_if %>
+                <% if $AlternateContent %>title="{$AlternateContent.XML}"<% end_if %>
                 <% if $IsResponsive %>class="responsive-item"<% end_if %>
                 width="{$IframeWidth.XML}"
                 height="{$IframeHeight.XML}"
