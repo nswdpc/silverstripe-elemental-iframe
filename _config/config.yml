@@ -1,0 +1,7 @@
+---
+Name: nswdpc-elemental-iframe
+---
+NSWDPC\Elemental\Models\Iframe\ElementIframe:
+  load_polyfill: true
+  default_allow_attributes:
+      - 'fullscreen'
