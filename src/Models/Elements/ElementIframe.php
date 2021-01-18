@@ -127,10 +127,6 @@ class ElementIframe extends BaseElement implements PermissionProvider {
     public function providePermissions()
     {
         return [
-            'ELEMENT_IFRAME_VIEW' => [
-                'name' => 'View iframe elements',
-                'category' => 'Iframe',
-            ],
             'ELEMENT_IFRAME_EDIT' => [
                 'name' => 'Edit iframe elements',
                 'category' => 'Iframe',
@@ -144,7 +140,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
 
     public function canView($member = null)
     {
-        return Permission::checkMember($member, 'ELEMENT_IFRAME_VIEW');
+        return true;
     }
 
     public function canEdit($member = null)
