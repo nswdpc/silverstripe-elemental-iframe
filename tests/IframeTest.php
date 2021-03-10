@@ -3,7 +3,7 @@
 namespace  NSWDPC\Elemental\Tests\QuickGallery;
 
 use gorriecoe\Link\Models\Link;
-use gorriecoe\LinkField\LinkField;
+use NSWDPC\InlineLinker\InlineLinkCompositeField;
 use NSWDPC\Elemental\Models\Iframe\ElementIframe;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;

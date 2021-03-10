@@ -4,7 +4,7 @@ namespace NSWDPC\Elemental\Models\Iframe;
 
 use DNADesign\Elemental\Models\BaseElement;
 use gorriecoe\Link\Models\Link;
-use gorriecoe\LinkField\LinkField;
+use NSWDPC\InlineLinker\InlineLinkCompositeField;
 use NSWDPC\Elemental\Controllers\Iframe\ElementIframeController;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\TextareaField;
@@ -25,9 +25,6 @@ class ElementIframe extends BaseElement implements PermissionProvider {
     private static $table_name = 'ElementIframe';
 
     private static $icon = 'font-icon-code';
-
-    // Due to LinkField inclusion
-    private static $inline_editable = false;
 
     private static $singular_name = 'Iframe';
     private static $plural_name = 'Iframes';
@@ -208,7 +205,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
 
         $fields->addFieldsToTab(
             'Root.Main', [
-                LinkField::create(
+                InlineLinkCompositeField::create(
                     'URL',
                     _t(__CLASS__. '.URL', 'URL'),
                     $this
