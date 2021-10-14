@@ -40,6 +40,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
     private static $db = [
         'IsLazy' => 'Boolean',
         'IsFullWidth' =>  'Boolean',
+        'IsDynamic' =>  'Boolean',
         'IsResponsive' =>  'Varchar(8)',
         'Width' => 'Varchar(8)',
         'Height' => 'Varchar(8)',
@@ -89,6 +90,22 @@ class ElementIframe extends BaseElement implements PermissionProvider {
             );
         }
 
+        // Dynamic iframe height
+        if($this->IsDynamic) {
+            Requirements::javascript(
+                'https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.2/iframeResizer.min.js',
+                [
+                    'integrity' => 'sha512-dnvR4Aebv5bAtJxDunq3eE8puKAJrY9GBJYl9GC6lTOEC76s1dbDfJFcL9GyzpaDW4vlI/UjR8sKbc1j6Ynx6w==',
+                    'crossorigin' => 'anonymous'
+                ]
+            );
+            Requirements::customScript(
+<<<JS
+    iFrameResize({ log: true }, '.dynamic-item')
+JS
+            );
+
+        }
         // Lazy load polyfill, if configured and LazyLoad is on
         if($this->IsLazy && $this->config()->get('load_polyfill')) {
             Requirements::javascript(
@@ -213,6 +230,15 @@ class ElementIframe extends BaseElement implements PermissionProvider {
                 CheckboxField::create(
                     'IsLazy',
                     _t(__CLASS__. '.LAZY_LOAD', 'Lazy load (only load the URL when contents are in view)')
+                ),
+                CheckboxField::create(
+                    'IsDynamic',
+                    _t(__CLASS__. '.DYNAMIC', 'Automatically set height to iframe content')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.RESPONSIVE_DESCRIPTION',
+                        'Requires <a href="https://github.com/davidjbradshaw/iframe-resizer" target="_blank">Iframe-Resizer</a> installed on remote page.'
+                        )
                 ),
                 CheckboxField::create(
                     'IsFullWidth',
