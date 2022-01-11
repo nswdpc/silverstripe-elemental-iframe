@@ -67,6 +67,11 @@ class ElementIframe extends BaseElement implements PermissionProvider {
 
     private static $load_polyfill = true;
 
+    /**
+     * @var bool
+     */
+    private static $resizer_log = false;
+
     public function getType()
     {
         return _t(__CLASS__ . '.BlockType', 'Iframe');
@@ -99,10 +104,10 @@ class ElementIframe extends BaseElement implements PermissionProvider {
                     'crossorigin' => 'anonymous'
                 ]
             );
+            // Custom script, with uniquenessId to set only once in the case of > 1 iframe elements in the page
             Requirements::customScript(
-<<<JS
-    iFrameResize({ log: true }, '.dynamic-item')
-JS
+                $this->DynamicCustomScript(),
+                'iframe-resizer-trigger'
             );
 
         }
@@ -117,6 +122,28 @@ JS
             );
         }
         return parent::forTemplate($holder);
+    }
+
+    /**
+     * Return the script used to handle dynamic height changes
+     * this fires iFrameResize on window.load
+     * @return string
+     */
+    public function DynamicCustomScript() : string {
+            $log = $this->config()->get('resizer_log') ? 'true' : 'false';
+            $script = <<<JAVASCRIPT
+window.addEventListener('load', function() {
+    try { iFrameResize( { log: {$log} }, '.iframe-resizer iframe' ); } catch (e) { console.warn(e); }
+});
+JAVASCRIPT;
+        return $script;
+    }
+
+    /**
+     * Return id attribute for iframe element
+     */
+    public function IframeID() : string {
+        return $this->getAnchor() . "-frame";
     }
 
     /**
@@ -229,25 +256,30 @@ JS
                 ),
                 CheckboxField::create(
                     'IsLazy',
-                    _t(__CLASS__. '.LAZY_LOAD', 'Lazy load (only load the URL when contents are in view)')
+                    _t(__CLASS__. '.LAZY_LOAD', 'Lazy load')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.LAZYLOAD_DESCRIPTION',
+                        'When checked, load the iframe URL when contents are in view'
+                    )
                 ),
                 CheckboxField::create(
                     'IsDynamic',
                     _t(__CLASS__. '.DYNAMIC', 'Automatically set height to iframe content')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.RESPONSIVE_DESCRIPTION',
-                        'Requires <a href="https://github.com/davidjbradshaw/iframe-resizer" target="_blank">Iframe-Resizer</a> installed on remote page.'
-                        )
+                        __CLASS__ . '.DYNAMIC_DESCRIPTION',
+                        'Requires <code>https://github.com/davidjbradshaw/iframe-resizer</code> to be installed on the remote page. This option is not compatible with responsive iframes.'
+                    )
                 ),
                 CheckboxField::create(
                     'IsFullWidth',
                     _t(__CLASS__. '.FULL_WIDTH', 'Enforce full width')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.RESPONSIVE_DESCRIPTION',
-                        'When set, this option will override the width to 100% of the container and maintain aspect ratio'
-                        )
+                        __CLASS__ . '.FULL_WIDTH_DESCRIPTION',
+                        'When checked, this option will override the width to 100% of the container and maintain aspect ratio'
+                    )
                 ),
                 DropdownField::create(
                     'IsResponsive',
@@ -263,10 +295,20 @@ JS
                 TextField::create(
                     'Width',
                     _t(__CLASS__. '.WIDTH', 'Width')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.WIDTH_DESCRIPTION',
+                        'A width value, for example <code>100%</code> or <code>800</code>. Do not specify \'px\'.'
+                    )
                 ),
                 TextField::create(
                     'Height',
                     _t(__CLASS__. '.HEIGHT', 'Height')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.HEIGHT_DESCRIPTION',
+                        'A height value, for example <code>200</code> or <code>800</code>. Do not specify \'px\'.'
+                    )
                 ),
                 TextareaField::create(
                     'AlternateContent',

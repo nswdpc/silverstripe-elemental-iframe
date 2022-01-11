@@ -3,5 +3,6 @@ Name: nswdpc-elemental-iframe
 ---
 NSWDPC\Elemental\Models\Iframe\ElementIframe:
   load_polyfill: true
+  resizer_log: false
   default_allow_attributes:
       - 'fullscreen'
