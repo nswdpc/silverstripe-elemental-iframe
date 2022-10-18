@@ -335,7 +335,7 @@ JAVASCRIPT;
     /**
      * Return the width or 100% if not set
      */
-    public function getIframeWidth() {
+    public function getIframeWidth() : string {
         $width = $this->getField('Width');
         if(!$width || $this->IsFullWidth || $this->IsResponsive) {
             $width = "100%";
@@ -346,7 +346,7 @@ JAVASCRIPT;
     /**
      * Return the default height or a set height of 400 if not set
      */
-    protected function getDefaultHeight() {
+    protected function getDefaultHeight() : string {
         $height = $this->config()->get('default_height');
         if(!$height) {
             $height = '400';
