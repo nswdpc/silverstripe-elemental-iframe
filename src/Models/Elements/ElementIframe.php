@@ -2,9 +2,9 @@
 
 namespace NSWDPC\Elemental\Models\Iframe;
 
+use Codem\Utilities\HTML5\UrlField;
 use DNADesign\Elemental\Models\BaseElement;
 use gorriecoe\Link\Models\Link;
-use NSWDPC\InlineLinker\InlineLinkCompositeField;
 use NSWDPC\Elemental\Controllers\Iframe\ElementIframeController;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\TextareaField;
@@ -14,6 +14,7 @@ use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Permission;
 use SilverStripe\View\Requirements;
+use SilverStripe\View\ViewableData;
 /**
  * ElementIframe class
  *
@@ -208,6 +209,56 @@ JAVASCRIPT;
         if($this->Height <= 0) {
             $this->Height = $this->getDefaultHeight();
         }
+
+        /**
+         * Translate the URL value provided into a Link model URL
+         * and allow to be assigned to record
+         */
+        if($urlId = $this->saveURLtoLink( $this->URLValue )) {
+            $this->URLID = $urlId;
+        }
+    }
+
+    /**
+     * Given a string URL, save it to the current Link model as an external URL value
+     * @param string $urlValue a URL
+     * @return int|null the Link model record ID or null if not a value
+     */
+    public function saveURLtoLink(string $urlValue = null) : ?int {
+
+        if(!$urlValue) {
+            // avoid saving a link model that has no URL
+            return null;
+        }
+
+        // Assign title for link record
+        $title = _t(
+            __CLASS__ . ".LINK_TITLE",
+            "Link for iframe element {title}",
+            [
+                'title' => $this->exists() ? "(#{$this->ID})" : "(new)"
+            ]
+        );
+
+        // Find or create a new Link record
+        $link = $this->URL();
+        if(!$link || !$link->exists()) {
+            $link = Link::create();
+        }
+
+        // Save values as external URL type
+        $link->Type = "URL";
+        $link->Title = $title;
+        $link->Email = "";
+        $link->Phone = "";
+        $link->FileID = 0;
+        $link->SiteTreeID = 0;
+        $link->Anchor = null;
+        $link->OpenInNewWindow = 0;
+        $link->SelectedStyle = "";
+        $link->URL = $urlValue;
+        $id = $link->write();
+        return is_int($id) ? $id : null;
     }
 
     /**
@@ -240,6 +291,24 @@ JAVASCRIPT;
         return $height;
     }
 
+    /**
+     * Return the URL as a string value from the Link model
+     * This provides some compatibility between previous versions that used the LinkFields to add an iframe src
+     */
+    public function getURLAsString() : string {
+        $url = "";
+        $link = $this->URL();
+        if( $link && $link->exists() ) {
+            $linkURL = $link->getLinkURL();
+            if(is_string($linkURL)) {
+                $url = $linkURL;
+            } else if($linkURL instanceof ViewableData) {
+                $url = $linkURL->forTemplate();
+            }
+        }
+        return $url;
+    }
+
     public function getCMSFields() {
         $fields = parent::getCMSFields();
 
@@ -247,13 +316,16 @@ JAVASCRIPT;
             'URLID'
         ]);
 
+        $urlField = UrlField::create(
+            'URLValue',
+            _t(__CLASS__. '.URL', 'The URL to use as the iframe source'),
+            $this->getURLAsString()
+        )->setDescription(
+            _t(__CLASS__. '.URL_DESCRIPTION', 'Pages loaded over https will require a https:// URL'),
+        );
+
         $fields->addFieldsToTab(
             'Root.Main', [
-                InlineLinkCompositeField::create(
-                    'URL',
-                    _t(__CLASS__. '.URL', 'URL'),
-                    $this
-                ),
                 CheckboxField::create(
                     'IsLazy',
                     _t(__CLASS__. '.LAZY_LOAD', 'Lazy load')
@@ -322,6 +394,8 @@ JAVASCRIPT;
                 )
             ]
         );
+
+        $fields->insertBefore('IsLazy', $urlField);
         return $fields;
     }
 
