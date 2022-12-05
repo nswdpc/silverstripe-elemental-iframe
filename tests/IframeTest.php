@@ -1,8 +1,10 @@
 <?php
 
-namespace  NSWDPC\Elemental\Tests\QuickGallery;
+namespace  NSWDPC\Elemental\Tests\Iframe;
 
+use Codem\Utilities\HTML5\UrlField;
 use gorriecoe\Link\Models\Link;
+use gorriecoe\Link\View\Phone as PhoneView;
 use NSWDPC\InlineLinker\InlineLinkCompositeField;
 use NSWDPC\Elemental\Models\Iframe\ElementIframe;
 use SilverStripe\Core\Config\Config;
@@ -11,6 +13,8 @@ use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\ValidationException;
 use SilverStripe\View\Requirements;
 
 /**
@@ -20,19 +24,21 @@ use SilverStripe\View\Requirements;
 class IframeTest extends SapphireTest
 {
 
+    /**
+     * @inheritdoc
+     */
     protected $usesDatabase = true;
 
+    /**
+     * @inheritdoc
+     */
+    protected static $fixture_file = './IframeTest.yml';
+
+    /**
+     * @inheritdoc
+     */
     public function setUp() {
         parent::setUp();
-    }
-
-    public function tearDown()
-    {
-        parent::tearDown();
-    }
-
-    public function testIframe() {
-
         Config::inst()->update(
             ElementIframe::class,
             'default_allow_attributes',
@@ -41,40 +47,56 @@ class IframeTest extends SapphireTest
             ]
         );
 
-        $width = 300;
-        $height = 200;
+        // Set backend root to /IframeFileTest
+        TestAssetStore::activate('IframeFileTest');
 
-        $record = [
-            'Title' => 'IFRAME_TITLE',
-            'ShowTitle' => 1,
-            'IsLazy' => 1,
-            'IsFullWidth' => 1,
-            'IsResponsive' => '16x9',
-            'Width' => $width,
-            'Height' => $height,
-            'AlternateContent' => 'ALT_CONTENT'
-        ];
+        // Create a test files for each of the fixture references
+        $fileIDs = array_merge(
+            $this->allFixtureIDs(File::class)
+        );
+        foreach ($fileIDs as $fileID) {
+            /** @var File $file */
+            $file = DataObject::get_by_id(File::class, $fileID);
+            $file->setFromString(str_repeat('x', 1000000), $file->getFilename());
+            $file->doPublish();
+        }
 
-        $link_record = [
-            'Title' => 'TEST_LINK_IFRAME',
-            'Type' => 'URL',
-            'URL' => 'https://example.com/?foo=bar&1=<small>'
-        ];
+    }
 
-        $link = Link::create($link_record);
-        $link->write();
-        $record['URLID'] = $link->ID;// store record
+    /**
+     * @inheritdoc
+     */
+    public function tearDown()
+    {
+        parent::tearDown();
+        TestAssetStore::reset();
+    }
 
-        $iframe = ElementIframe::create($record);
+    /**
+     * Test iframe element saving
+     */
+    public function testIframe() {
+
+        $iframe = $this->objFromFixture( ElementIframe::class, 'standard');
+
+        // save this URL value
+        $url = 'https://example.com/?foo=bar&1=<small>';
+        $iframe->URLValue = $url;
         $iframe->write();
 
-        $this->assertTrue($iframe->exists(), "Element iframe does not exist");
+        // assert the iframe has a link
+        $link = $iframe->URL();
+        $this->assertInstanceOf(Link::class, $link);
+        $this->assertEquals('URL', $link->Type);
+
+        $linkURL = $link->getLinkURL();
+        $this->assertEquals($url, $linkURL);
 
         $iframe_width = $iframe->getIframeWidth();
         $this->assertEquals("100%", $iframe_width, "Responsive iframe should be 100% width");
 
         $iframe_height = $iframe->getIframeHeight();
-        $this->assertEquals("200", $iframe_height, "Iframe should be {$height} height");
+        $this->assertEquals($iframe->Height, $iframe_height, "Iframe should be {$iframe->Height} height");
 
         $template = $iframe->forTemplate();
 
@@ -83,10 +105,10 @@ class IframeTest extends SapphireTest
             "allow=\"fullscreen\"",
             "loading=\"lazy\"",
             "width=\"100%\"",
-            "height=\"200\"",
+            "height=\"{$iframe->Height}\"",
             "<h2>IFRAME_TITLE</h2>",
             "title=\"ALT_CONTENT\"",
-            "src=\"" . htmlspecialchars($link_record['URL']) . "\""
+            "src=\"" . htmlspecialchars($linkURL) . "\""
         ];
 
         foreach($strings as $string) {
@@ -156,4 +178,105 @@ class IframeTest extends SapphireTest
 
     }
 
+    /**
+     * ----
+     * Tests to handle migration to external URL types after moving from LinkField to a standard URL field
+     * (for BC)
+     * ----
+     */
+
+    public function testBCURL() {
+        $expected = 'https://example.org?1=2';
+        $iframe = $this->objFromFixture( ElementIframe::class, 'bcurl');
+        $link = $iframe->URL();
+        $this->assertEquals('URL', $link->Type);
+
+        $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
+        $this->assertInstanceOf( UrlField::class, $field );
+        $this->assertEquals( $expected, $field->dataValue() );
+
+        $iframe->URLValue = $expected;
+        $iframe->write();
+
+        $this->assertEquals('URL', $link->Type);
+        $this->assertEquals($expected, $iframe->getURLAsString());
+    }
+
+    public function testBCEmail() {
+        $value = 'test@example.com';
+        $expected = 'mailto:' . $value;
+        $iframe = $this->objFromFixture( ElementIframe::class, 'bcemail');
+        $link = $iframe->URL();
+        $this->assertEquals('Email', $link->Type);
+
+        $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
+        $this->assertInstanceOf( UrlField::class, $field );
+        $this->assertEquals( $expected, $field->dataValue() );
+
+        $iframe->URLValue = $expected;
+        $iframe->write();
+
+        $this->assertEquals('URL', $link->Type);
+        $this->assertEquals($expected, $iframe->getURLAsString());
+    }
+
+    public function testBCPhone() {
+
+        Config::inst()->update( PhoneView::class, 'default_country', 'AU');
+
+        $value = '+61-400-000-000';
+        $expected = 'tel:' . $value;
+        $iframe = $this->objFromFixture( ElementIframe::class, 'bcphone');
+        $link = $iframe->URL();
+
+        $this->assertEquals('Phone', $link->Type);
+
+        $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
+        $this->assertInstanceOf( UrlField::class, $field );
+        $this->assertEquals( $expected, $field->dataValue() );
+
+        try {
+            $iframe->URLValue = $value;
+            $iframe->write();
+        } catch (ValidationException $e) {
+            // This value will fail validation
+            $this->assertNotEmpty($e->getMessage());
+        }
+
+    }
+
+    public function testBCSiteTree() {
+        $expected = '/page-test/';
+        $iframe = $this->objFromFixture( ElementIframe::class, 'bcsitetree');
+        $link = $iframe->URL();
+        $this->assertEquals('SiteTree', $link->Type);
+
+        $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
+        $this->assertInstanceOf( UrlField::class, $field );
+        $this->assertEquals( $expected, $field->dataValue() );
+
+        $iframe->URLValue = $expected;
+        $iframe->write();
+
+        $this->assertEquals('URL', $link->Type);
+        $this->assertEquals($expected, $iframe->getURLAsString());
+    }
+
+    public function testBCFile() {
+        $expected = '/' . ASSETS_DIR . '/IframeFileTest/file.jpg';
+        $iframe = $this->objFromFixture( ElementIframe::class, 'bcfile');
+        $link = $iframe->URL();
+        $file = $link->File();
+        $this->assertEquals('File', $link->Type);
+
+        $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
+        $this->assertInstanceOf( UrlField::class, $field );
+        $this->assertEquals( $expected, $field->dataValue() );
+
+        $iframe->URLValue = $expected;
+        $iframe->write();
+
+        $this->assertEquals('URL', $link->Type);
+        $this->assertEquals($expected, $iframe->getURLAsString());
+    }
 }

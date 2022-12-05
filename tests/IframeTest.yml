@@ -1,0 +1,93 @@
+SilverStripe\Assets\File:
+  asset1:
+    Title: 'File test'
+    FileFilename: 'file.jpg'
+    FileHash: '55b443b60176235ef09801153cca4e6da7494a0c'
+    Name: 'file.jpg'
+SilverStripe\CMS\Model\SiteTree:
+  page1:
+    Title: 'Page Test'
+    URLSegment: 'page-test'
+    ParentID: 0
+gorriecoe\Link\Models\Link:
+  url:
+    Type: 'URL'
+    URL: 'https://example.org?1=2'
+    Title: 'URL example'
+  email:
+    Type: 'Email'
+    Email: 'test@example.com'
+    Title: 'Email example'
+  phone:
+    Type: 'Phone'
+    Phone: '+61 400 000 000'
+    Title: 'Phone example'
+  sitetree:
+    Type: 'SiteTree'
+    SiteTreeID: '=>SilverStripe\CMS\Model\SiteTree.page1'
+    Title: 'SiteTree example'
+  file:
+    Type: 'File'
+    FileID: '=>SilverStripe\Assets\File.asset1'
+    Title: 'File example'
+NSWDPC\Elemental\Models\Iframe\ElementIframe:
+  standard:
+    Title: 'IFRAME_TITLE'
+    ShowTitle: 1
+    IsLazy: 1
+    IsFullWidth: 1
+    IsResponsive: '16x9'
+    Width: 300
+    Height: 200
+    AlternateContent: 'ALT_CONTENT'
+  ## Fixtures for testing auto migration of Link records to URLValue display and handling
+  bcurl:
+    Title: 'BC URL'
+    ShowTitle: 1
+    IsLazy: 1
+    IsFullWidth: 1
+    IsResponsive: '16x9'
+    Width: 300
+    Height: 200
+    AlternateContent: 'ALT_CONTENT'
+    URL: '=>gorriecoe\Link\Models\Link.url'
+  bcemail:
+    Title: 'BC Email'
+    ShowTitle: 1
+    IsLazy: 1
+    IsFullWidth: 1
+    IsResponsive: '16x9'
+    Width: 300
+    Height: 200
+    AlternateContent: 'ALT_CONTENT'
+    URL: '=>gorriecoe\Link\Models\Link.email'
+  bcphone:
+    Title: 'BC Phone'
+    ShowTitle: 1
+    IsLazy: 1
+    IsFullWidth: 1
+    IsResponsive: '16x9'
+    Width: 300
+    Height: 200
+    AlternateContent: 'ALT_CONTENT'
+    URL: '=>gorriecoe\Link\Models\Link.phone'
+  bcsitetree:
+    Title: 'BC SiteTree'
+    ShowTitle: 1
+    IsLazy: 1
+    IsFullWidth: 1
+    IsResponsive: '16x9'
+    Width: 300
+    Height: 200
+    AlternateContent: 'ALT_CONTENT'
+    URL: '=>gorriecoe\Link\Models\Link.sitetree'
+  bcfile:
+    Title: 'BC File'
+    ShowTitle: 1
+    IsLazy: 1
+    IsFullWidth: 1
+    IsResponsive: '16x9'
+    Width: 300
+    Height: 200
+    AlternateContent: 'ALT_CONTENT'
+    URL: '=>gorriecoe\Link\Models\Link.file'
