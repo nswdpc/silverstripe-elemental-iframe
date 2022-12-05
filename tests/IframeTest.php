@@ -37,7 +37,7 @@ class IframeTest extends SapphireTest
     /**
      * @inheritdoc
      */
-    public function setUp() {
+    public function setUp() : void {
         parent::setUp();
         Config::inst()->update(
             ElementIframe::class,
@@ -66,7 +66,7 @@ class IframeTest extends SapphireTest
     /**
      * @inheritdoc
      */
-    public function tearDown()
+    public function tearDown() : void
     {
         parent::tearDown();
         TestAssetStore::reset();

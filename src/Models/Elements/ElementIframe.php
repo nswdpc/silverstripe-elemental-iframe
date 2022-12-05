@@ -15,29 +15,52 @@ use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Permission;
 use SilverStripe\View\Requirements;
 use SilverStripe\View\ViewableData;
+
 /**
- * ElementIframe class
+ * Iframe content block
  *
- * @author Mark Taylor <mark.taylor@dpc.nsw.gov.au>
- * @author James Ellis <mark.taylor@dpc.nsw.gov.au>
+ * @author Mark Taylor
+ * @author James Ellis
  */
 class ElementIframe extends BaseElement implements PermissionProvider {
 
+    /**
+     * @var string
+     */
     private static $table_name = 'ElementIframe';
 
+    /**
+     * @var string
+     */
     private static $icon = 'font-icon-code';
 
+    /**
+     * @var string
+     */
     private static $singular_name = 'Iframe';
+
+    /**
+     * @var string
+     */
     private static $plural_name = 'Iframes';
 
+    /**
+     * @var array
+     */
     private static $default_allow_attributes = [
         'fullscreen'
     ];
 
+    /**
+     * @var array
+     */
     private static $has_one = [
         'URL' => Link::class,
     ];
 
+    /**
+     * @var array
+     */
     private static $db = [
         'IsLazy' => 'Boolean',
         'IsFullWidth' =>  'Boolean',
@@ -48,6 +71,9 @@ class ElementIframe extends BaseElement implements PermissionProvider {
         'AlternateContent' => 'Text'
     ];
 
+    /**
+     * @var array
+     */
     private static $defaults = [
         'IsLazy' => 1,
         'IsFullWidth' => 1,
@@ -56,16 +82,32 @@ class ElementIframe extends BaseElement implements PermissionProvider {
         'Height' => '400',
     ];
 
+    /**
+     * @var string
+     */
     private static $title = 'Iframe';
+
+    /**
+     * @var string
+     */
     private static $description = 'Display content in an HTML iframe tag';
 
+    /**
+     * @var array
+     */
     private static $responsive_options = [
         '16x9' => '16x9',
         '4x3' => '4x3'
     ];
 
+    /**
+     * @var string
+     */
     private static $default_height = '400';
 
+    /**
+     * @var string
+     */
     private static $load_polyfill = true;
 
     /**
@@ -73,6 +115,9 @@ class ElementIframe extends BaseElement implements PermissionProvider {
      */
     private static $resizer_log = false;
 
+    /**
+     * @inheritdoc
+     */
     public function getType()
     {
         return _t(__CLASS__ . '.BlockType', 'Iframe');
@@ -180,25 +225,40 @@ JAVASCRIPT;
         ];
     }
 
+    /**
+     * @inheritdoc
+     */
     public function canEdit($member = null)
     {
         return Permission::checkMember($member, 'ELEMENT_IFRAME_EDIT');
     }
 
+    /**
+     * @inheritdoc
+     */
     public function canDelete($member = null)
     {
         return Permission::checkMember($member, 'ELEMENT_IFRAME_DELETE');
     }
 
+    /**
+     * @inheritdoc
+     */
     public function canCreate($member = null, $context = [])
     {
         return Permission::checkMember($member, 'ELEMENT_IFRAME_EDIT');
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getResponsiveOptions() {
         return $this->config()->get('responsive_options') ?: [];
     }
 
+    /**
+     * @inheritdoc
+     */
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -275,7 +335,7 @@ JAVASCRIPT;
     /**
      * Return the width or 100% if not set
      */
-    public function getIframeWidth() {
+    public function getIframeWidth() : string {
         $width = $this->getField('Width');
         if(!$width || $this->IsFullWidth || $this->IsResponsive) {
             $width = "100%";
@@ -283,7 +343,10 @@ JAVASCRIPT;
         return $width;
     }
 
-    protected function getDefaultHeight() {
+    /**
+     * Return the default height or a set height of 400 if not set
+     */
+    protected function getDefaultHeight() : string {
         $height = $this->config()->get('default_height');
         if(!$height) {
             $height = '400';
@@ -309,6 +372,9 @@ JAVASCRIPT;
         return $url;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getCMSFields() {
         $fields = parent::getCMSFields();
 
