@@ -39,7 +39,7 @@ class IframeTest extends SapphireTest
      */
     public function setUp() : void {
         parent::setUp();
-        Config::inst()->update(
+        Config::modify()->set(
             ElementIframe::class,
             'default_allow_attributes',
             [
@@ -58,7 +58,7 @@ class IframeTest extends SapphireTest
             /** @var File $file */
             $file = DataObject::get_by_id(File::class, $fileID);
             $file->setFromString(str_repeat('x', 1000000), $file->getFilename());
-            $file->doPublish();
+            $file->publishSingle();
         }
 
     }
@@ -134,7 +134,7 @@ class IframeTest extends SapphireTest
             $this->assertTrue($result !== false, "Expected integrity hash {$hash} is not present in requirements");
         }
 
-        $iframe->doPublish();
+        $iframe->publishSingle();
 
         $this->assertTrue($iframe->isPublished(), "Iframe is not published");
 
@@ -144,7 +144,7 @@ class IframeTest extends SapphireTest
         $iframe->IsLazy = 0;
         $iframe->Width = 600;
         $iframe->write();
-        $iframe->doPublish();
+        $iframe->publishSingle();
 
         $this->assertEquals(600, $iframe->getIframeWidth(), "Iframe width should now be 600");
 
@@ -222,7 +222,7 @@ class IframeTest extends SapphireTest
 
     public function testBCPhone() {
 
-        Config::inst()->update( PhoneView::class, 'default_country', 'AU');
+        Config::modify()->set( PhoneView::class, 'default_country', 'AU');
 
         $value = '+61-400-000-000';
         $expected = 'tel:' . $value;
@@ -246,7 +246,7 @@ class IframeTest extends SapphireTest
     }
 
     public function testBCSiteTree() {
-        $expected = '/page-test/';
+        $expected = '/page-test';
         $iframe = $this->objFromFixture( ElementIframe::class, 'bcsitetree');
         $link = $iframe->URL();
         $this->assertEquals('SiteTree', $link->Type);
