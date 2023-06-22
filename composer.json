@@ -22,9 +22,9 @@
         }
     ],
     "require": {
-        "dnadesign/silverstripe-elemental": "^4.9.0",
-        "codem/silverstripe-html5-inputs": "^0.1",
-        "gorriecoe/silverstripe-link": "^1.0"
+        "dnadesign/silverstripe-elemental": "^5",
+        "codem/silverstripe-html5-inputs": "^1",
+        "gorriecoe/silverstripe-link": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
