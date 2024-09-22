@@ -108,7 +108,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
     /**
      * @var string
      */
-    private static $load_polyfill = true;
+    private static $load_polyfill = false;
 
     /**
      * @var bool
