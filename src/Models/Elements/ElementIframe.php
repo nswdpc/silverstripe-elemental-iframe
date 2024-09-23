@@ -465,4 +465,11 @@ JAVASCRIPT;
         return $fields;
     }
 
+    /**
+     * Return whether lazy load polyfill is enabled, useful in templates
+     */
+    public function HasPolyfill(): bool {
+        return (bool)self::config()->get('load_polyfill');
+    }
+
 }
