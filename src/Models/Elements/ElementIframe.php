@@ -105,10 +105,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
      */
     private static $default_height = '400';
 
-    /**
-     * @var string
-     */
-    private static $load_polyfill = false;
+    private static bool $load_polyfill = false;
 
     /**
      * @var bool
