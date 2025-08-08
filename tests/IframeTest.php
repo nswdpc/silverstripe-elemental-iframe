@@ -37,6 +37,7 @@ class IframeTest extends SapphireTest
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function setUp() : void {
         parent::setUp();
         Config::modify()->set(
@@ -66,6 +67,7 @@ class IframeTest extends SapphireTest
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function tearDown() : void
     {
         parent::tearDown();
@@ -75,7 +77,7 @@ class IframeTest extends SapphireTest
     /**
      * Test iframe element saving
      */
-    public function testIframe() {
+    public function testIframe(): void {
 
         $iframe = $this->objFromFixture( ElementIframe::class, 'standard');
 
@@ -102,17 +104,17 @@ class IframeTest extends SapphireTest
 
         $strings = [
             "is-16x9",
-            "allow=\"fullscreen\"",
-            "loading=\"lazy\"",
-            "width=\"100%\"",
+            'allow="fullscreen"',
+            'loading="lazy"',
+            'width="100%"',
             "height=\"{$iframe->Height}\"",
             "<h2>IFRAME_TITLE</h2>",
-            "title=\"ALT_CONTENT\"",
-            "src=\"" . htmlspecialchars($linkURL) . "\""
+            'title="ALT_CONTENT"',
+            'src="' . htmlspecialchars($linkURL) . '"'
         ];
 
         foreach($strings as $string) {
-            $this->assertTrue(strpos($template, $string) !== false, "{$string} should appear in the template");
+            $this->assertTrue(str_contains((string) $template, $string), "{$string} should appear in the template");
         }
 
         $backend = Requirements::backend();
@@ -130,7 +132,7 @@ class IframeTest extends SapphireTest
         ];
 
         foreach($hashes as $hash) {
-            $result = array_search( $hash, array_column($assets, 'integrity'));
+            $result = array_search( $hash, array_column($assets, 'integrity'), true);
             $this->assertTrue($result !== false, "Expected integrity hash {$hash} is not present in requirements");
         }
 
@@ -160,7 +162,7 @@ class IframeTest extends SapphireTest
 
         foreach($hashes as $hash) {
             $this->assertFalse(
-                array_search( $hash, array_column($assets, 'integrity') ),
+                array_search( $hash, array_column($assets, 'integrity'), true ),
                 "Hash {$hash} should no longer be in requirements"
             );
         }
@@ -168,12 +170,12 @@ class IframeTest extends SapphireTest
         // these strings should not appear in the template
         $strings = [
             "is-16x9",
-            "loading=\"lazy\"",
-            "width=\"100%\""
+            'loading="lazy"',
+            'width="100%"'
         ];
 
         foreach($strings as $string) {
-            $this->assertFalse(strpos($template, $string), "{$string} should NOT appear in the template");
+            $this->assertFalse(strpos((string) $template, $string), "{$string} should NOT appear in the template");
         }
 
     }
@@ -185,7 +187,7 @@ class IframeTest extends SapphireTest
      * ----
      */
 
-    public function testBCURL() {
+    public function testBCURL(): void {
         $expected = 'https://example.org?1=2';
         $iframe = $this->objFromFixture( ElementIframe::class, 'bcurl');
         $link = $iframe->URL();
@@ -202,7 +204,7 @@ class IframeTest extends SapphireTest
         $this->assertEquals($expected, $iframe->getURLAsString());
     }
 
-    public function testBCEmail() {
+    public function testBCEmail(): void {
         $value = 'test@example.com';
         $expected = 'mailto:' . $value;
         $iframe = $this->objFromFixture( ElementIframe::class, 'bcemail');
@@ -220,7 +222,7 @@ class IframeTest extends SapphireTest
         $this->assertEquals($expected, $iframe->getURLAsString());
     }
 
-    public function testBCPhone() {
+    public function testBCPhone(): void {
 
         Config::modify()->set( PhoneView::class, 'default_country', 'AU');
 
@@ -238,14 +240,14 @@ class IframeTest extends SapphireTest
         try {
             $iframe->URLValue = $value;
             $iframe->write();
-        } catch (ValidationException $e) {
+        } catch (ValidationException $validationException) {
             // This value will fail validation
-            $this->assertNotEmpty($e->getMessage());
+            $this->assertNotEmpty($validationException->getMessage());
         }
 
     }
 
-    public function testBCSiteTree() {
+    public function testBCSiteTree(): void {
         $expected = '/page-test';
         $iframe = $this->objFromFixture( ElementIframe::class, 'bcsitetree');
         $link = $iframe->URL();
@@ -262,11 +264,11 @@ class IframeTest extends SapphireTest
         $this->assertEquals($expected, $iframe->getURLAsString());
     }
 
-    public function testBCFile() {
+    public function testBCFile(): void {
         $expected = '/' . ASSETS_DIR . '/IframeFileTest/file.jpg';
         $iframe = $this->objFromFixture( ElementIframe::class, 'bcfile');
         $link = $iframe->URL();
-        $file = $link->File();
+        $link->File();
         $this->assertEquals('File', $link->Type);
 
         $field = $iframe->getCmsFields()->dataFieldByName('URLValue');

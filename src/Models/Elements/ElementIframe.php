@@ -21,47 +21,35 @@ use SilverStripe\View\ViewableData;
  *
  * @author Mark Taylor
  * @author James Ellis
+ * @property bool $IsLazy
+ * @property bool $IsFullWidth
+ * @property bool $IsDynamic
+ * @property ?string $IsResponsive
+ * @property ?string $Width
+ * @property ?string $Height
+ * @property ?string $AlternateContent
+ * @property int $URLID
+ * @method \gorriecoe\Link\Models\Link URL()
  */
 class ElementIframe extends BaseElement implements PermissionProvider {
 
-    /**
-     * @var string
-     */
-    private static $table_name = 'ElementIframe';
+    private static string $table_name = 'ElementIframe';
 
-    /**
-     * @var string
-     */
-    private static $icon = 'font-icon-code';
+    private static string $icon = 'font-icon-code';
 
-    /**
-     * @var string
-     */
-    private static $singular_name = 'Iframe';
+    private static string $singular_name = 'Iframe';
 
-    /**
-     * @var string
-     */
-    private static $plural_name = 'Iframes';
+    private static string $plural_name = 'Iframes';
 
-    /**
-     * @var array
-     */
-    private static $default_allow_attributes = [
+    private static array $default_allow_attributes = [
         'fullscreen'
     ];
 
-    /**
-     * @var array
-     */
-    private static $has_one = [
+    private static array $has_one = [
         'URL' => Link::class,
     ];
 
-    /**
-     * @var array
-     */
-    private static $db = [
+    private static array $db = [
         'IsLazy' => 'Boolean',
         'IsFullWidth' =>  'Boolean',
         'IsDynamic' =>  'Boolean',
@@ -71,10 +59,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
         'AlternateContent' => 'Text'
     ];
 
-    /**
-     * @var array
-     */
-    private static $defaults = [
+    private static array $defaults = [
         'IsLazy' => 1,
         'IsFullWidth' => 1,
         'IsResponsive' => '16x9',
@@ -82,47 +67,34 @@ class ElementIframe extends BaseElement implements PermissionProvider {
         'Height' => '400',
     ];
 
-    /**
-     * @var string
-     */
-    private static $title = 'Iframe';
+    private static string $title = 'Iframe';
 
-    /**
-     * @var string
-     */
-    private static $description = 'Display content in an HTML iframe tag';
+    private static string $description = 'Display content in an HTML iframe tag';
 
-    /**
-     * @var array
-     */
-    private static $responsive_options = [
+    private static array $responsive_options = [
         '16x9' => '16x9',
         '4x3' => '4x3'
     ];
 
-    /**
-     * @var string
-     */
-    private static $default_height = '400';
+    private static string $default_height = '400';
 
     private static bool $load_polyfill = false;
 
-    /**
-     * @var bool
-     */
-    private static $resizer_log = false;
+    private static bool $resizer_log = false;
 
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function getType()
     {
-        return _t(__CLASS__ . '.BlockType', 'Iframe');
+        return _t(self::class . '.BlockType', 'Iframe');
     }
 
     /**
      * Apply requirements when templating
      */
+    #[\Override]
     public function forTemplate($holder = true)
     {
 
@@ -154,6 +126,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
             );
 
         }
+
         // Lazy load polyfill, if configured and LazyLoad is on
         if($this->IsLazy && $this->config()->get('load_polyfill')) {
             Requirements::javascript(
@@ -164,22 +137,21 @@ class ElementIframe extends BaseElement implements PermissionProvider {
                 ]
             );
         }
+
         return parent::forTemplate($holder);
     }
 
     /**
      * Return the script used to handle dynamic height changes
      * this fires iFrameResize on window.load
-     * @return string
      */
     public function DynamicCustomScript() : string {
             $log = $this->config()->get('resizer_log') ? 'true' : 'false';
-            $script = <<<JAVASCRIPT
+        return <<<JAVASCRIPT
 window.addEventListener('load', function() {
     try { iFrameResize( { log: {$log} }, '.iframe-resizer iframe' ); } catch (e) { console.warn(e); }
 });
 JAVASCRIPT;
-        return $script;
     }
 
     /**
@@ -193,14 +165,15 @@ JAVASCRIPT;
      * Return default 'allow' attribute values
      * @return string (escaped)
      */
-    public function DefaultAllowAttributes() {
+    public function DefaultAllowAttributes(): string {
         $allow = $this->config()->get('default_allow_attributes');
-        if(is_array($allow) && !empty($allow)) {
+        if(is_array($allow) && $allow !== []) {
             $allow = array_unique($allow);
             $allow_value = htmlentities(implode(" ", $allow));
         } else {
             $allow_value = "";
         }
+
         return $allow_value;
     }
 
@@ -225,6 +198,7 @@ JAVASCRIPT;
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function canEdit($member = null)
     {
         return Permission::checkMember($member, 'ELEMENT_IFRAME_EDIT');
@@ -233,6 +207,7 @@ JAVASCRIPT;
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function canDelete($member = null)
     {
         return Permission::checkMember($member, 'ELEMENT_IFRAME_DELETE');
@@ -241,6 +216,7 @@ JAVASCRIPT;
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function canCreate($member = null, $context = [])
     {
         return Permission::checkMember($member, 'ELEMENT_IFRAME_EDIT');
@@ -256,6 +232,7 @@ JAVASCRIPT;
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -271,7 +248,7 @@ JAVASCRIPT;
          * Translate the URL value provided into a Link model URL
          * and allow to be assigned to record
          */
-        if($urlId = $this->saveURLtoLink( $this->URLValue )) {
+        if(($urlId = $this->saveURLtoLink( $this->URLValue )) !== null && ($urlId = $this->saveURLtoLink( $this->URLValue )) !== 0) {
             $this->URLID = $urlId;
         }
     }
@@ -283,14 +260,14 @@ JAVASCRIPT;
      */
     public function saveURLtoLink(string $urlValue = null) : ?int {
 
-        if(!$urlValue) {
+        if($urlValue === null || $urlValue === '' || $urlValue === '0') {
             // avoid saving a link model that has no URL
             return null;
         }
 
         // Assign title for link record
         $title = _t(
-            __CLASS__ . ".LINK_TITLE",
+            self::class . ".LINK_TITLE",
             "Link for iframe element {title}",
             [
                 'title' => $this->exists() ? "(#{$this->ID})" : "(new)"
@@ -314,6 +291,7 @@ JAVASCRIPT;
         $link->OpenInNewWindow = 0;
         $link->SelectedStyle = "";
         $link->URL = $urlValue;
+
         $id = $link->write();
         return is_int($id) ? $id : null;
     }
@@ -326,6 +304,7 @@ JAVASCRIPT;
         if(!$height) {
             $height = $this->getDefaultHeight();
         }
+
         return $height;
     }
 
@@ -337,6 +316,7 @@ JAVASCRIPT;
         if(!$width || $this->IsFullWidth || $this->IsResponsive) {
             $width = "100%";
         }
+
         return $width;
     }
 
@@ -348,6 +328,7 @@ JAVASCRIPT;
         if(!$height) {
             $height = '400';
         }
+
         return $height;
     }
 
@@ -360,18 +341,20 @@ JAVASCRIPT;
         $link = $this->URL();
         if( $link && $link->exists() ) {
             $linkURL = $link->getLinkURL();
-            if(is_string($linkURL)) {
+            if (is_string($linkURL)) {
                 $url = $linkURL;
-            } else if($linkURL instanceof ViewableData) {
+            } elseif ($linkURL instanceof ViewableData) {
                 $url = $linkURL->forTemplate();
             }
         }
+
         return $url;
     }
 
     /**
      * @inheritdoc
      */
+    #[\Override]
     public function getCMSFields() {
         $fields = parent::getCMSFields();
 
@@ -381,38 +364,38 @@ JAVASCRIPT;
 
         $urlField = UrlField::create(
             'URLValue',
-            _t(__CLASS__. '.URL', 'The URL to use as the iframe source'),
+            _t(self::class. '.URL', 'The URL to use as the iframe source'),
             $this->getURLAsString()
         )->setDescription(
-            _t(__CLASS__. '.URL_DESCRIPTION', 'Pages loaded over https will require a https:// URL'),
+            _t(self::class. '.URL_DESCRIPTION', 'Pages loaded over https will require a https:// URL'),
         );
 
         $fields->addFieldsToTab(
             'Root.Main', [
                 CheckboxField::create(
                     'IsLazy',
-                    _t(__CLASS__. '.LAZY_LOAD', 'Lazy load')
+                    _t(self::class. '.LAZY_LOAD', 'Lazy load')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.LAZYLOAD_DESCRIPTION',
+                        self::class . '.LAZYLOAD_DESCRIPTION',
                         'When checked, load the iframe URL when contents are in view'
                     )
                 ),
                 CheckboxField::create(
                     'IsDynamic',
-                    _t(__CLASS__. '.DYNAMIC', 'Automatically set height to iframe content')
+                    _t(self::class. '.DYNAMIC', 'Automatically set height to iframe content')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.DYNAMIC_DESCRIPTION',
+                        self::class . '.DYNAMIC_DESCRIPTION',
                         'Requires <code>https://github.com/davidjbradshaw/iframe-resizer</code> to be installed on the remote page. This option is not compatible with responsive iframes.'
                     )
                 ),
                 CheckboxField::create(
                     'IsFullWidth',
-                    _t(__CLASS__. '.FULL_WIDTH', 'Enforce full width')
+                    _t(self::class. '.FULL_WIDTH', 'Enforce full width')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.FULL_WIDTH_DESCRIPTION',
+                        self::class . '.FULL_WIDTH_DESCRIPTION',
                         'When checked, this option will override the width to 100% of the container and maintain aspect ratio'
                     )
                 ),
@@ -423,35 +406,35 @@ JAVASCRIPT;
                 )->setEmptyString('-not responsive-')
                     ->setDescription(
                         _t(
-                            __CLASS__ . '.RESPONSIVE_DESCRIPTION',
+                            self::class . '.RESPONSIVE_DESCRIPTION',
                             'When set, this option will override the width to 100% of the container and maintain aspect ratio'
                         )
                 ),
                 TextField::create(
                     'Width',
-                    _t(__CLASS__. '.WIDTH', 'Width')
+                    _t(self::class. '.WIDTH', 'Width')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.WIDTH_DESCRIPTION',
-                        'A width value, for example <code>100%</code> or <code>800</code>. Do not specify \'px\'.'
+                        self::class . '.WIDTH_DESCRIPTION',
+                        "A width value, for example <code>100%</code> or <code>800</code>. Do not specify 'px'."
                     )
                 ),
                 TextField::create(
                     'Height',
-                    _t(__CLASS__. '.HEIGHT', 'Height')
+                    _t(self::class. '.HEIGHT', 'Height')
                 )->setDescription(
                     _t(
-                        __CLASS__ . '.HEIGHT_DESCRIPTION',
-                        'A height value, for example <code>200</code> or <code>800</code>. Do not specify \'px\'.'
+                        self::class . '.HEIGHT_DESCRIPTION',
+                        "A height value, for example <code>200</code> or <code>800</code>. Do not specify 'px'."
                     )
                 ),
                 TextareaField::create(
                     'AlternateContent',
-                    _t(__CLASS__. '.ALTERNATE_CONTENT', 'Alternate content for used for assistive technologies')
+                    _t(self::class. '.ALTERNATE_CONTENT', 'Alternate content for used for assistive technologies')
                 )->setRows(4)
                 ->setDescription(
                     _t(
-                        __CLASS__. '.ALTERNATE_CONTENT_DESCRIPTION',
+                        self::class. '.ALTERNATE_CONTENT_DESCRIPTION',
                         "This value should concisely describe the embedded content to people using assistive technologies such as a screen reader"
                     )
                 )
