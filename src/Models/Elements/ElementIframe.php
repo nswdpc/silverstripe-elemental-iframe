@@ -5,8 +5,6 @@ namespace NSWDPC\Elemental\Models\Iframe;
 use Codem\Utilities\HTML5\UrlField;
 use DNADesign\Elemental\Models\BaseElement;
 use gorriecoe\Link\Models\Link;
-use NSWDPC\Elemental\Controllers\Iframe\ElementIframeController;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
@@ -31,8 +29,8 @@ use SilverStripe\View\ViewableData;
  * @property int $URLID
  * @method \gorriecoe\Link\Models\Link URL()
  */
-class ElementIframe extends BaseElement implements PermissionProvider {
-
+class ElementIframe extends BaseElement implements PermissionProvider
+{
     private static string $table_name = 'ElementIframe';
 
     private static string $icon = 'font-icon-code';
@@ -99,7 +97,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
     {
 
         // Responsive CSS
-        if($this->IsResponsive) {
+        if ($this->IsResponsive) {
             Requirements::css(
                 'nswdpc/silverstripe-elemental-iframe:client/static/style/iframe.css',
                 'screen',
@@ -111,7 +109,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
         }
 
         // Dynamic iframe height
-        if($this->IsDynamic) {
+        if ($this->IsDynamic) {
             Requirements::javascript(
                 'https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.2/iframeResizer.min.js',
                 [
@@ -128,7 +126,7 @@ class ElementIframe extends BaseElement implements PermissionProvider {
         }
 
         // Lazy load polyfill, if configured and LazyLoad is on
-        if($this->IsLazy && $this->config()->get('load_polyfill')) {
+        if ($this->IsLazy && $this->config()->get('load_polyfill')) {
             Requirements::javascript(
                 "https://cdnjs.cloudflare.com/ajax/libs/loading-attribute-polyfill/1.5.4/loading-attribute-polyfill.min.js",
                 [
@@ -145,8 +143,9 @@ class ElementIframe extends BaseElement implements PermissionProvider {
      * Return the script used to handle dynamic height changes
      * this fires iFrameResize on window.load
      */
-    public function DynamicCustomScript() : string {
-            $log = $this->config()->get('resizer_log') ? 'true' : 'false';
+    public function DynamicCustomScript(): string
+    {
+        $log = $this->config()->get('resizer_log') ? 'true' : 'false';
         return <<<JAVASCRIPT
 window.addEventListener('load', function() {
     try { iFrameResize( { log: {$log} }, '.iframe-resizer iframe' ); } catch (e) { console.warn(e); }
@@ -157,7 +156,8 @@ JAVASCRIPT;
     /**
      * Return id attribute for iframe element
      */
-    public function IframeID() : string {
+    public function IframeID(): string
+    {
         return $this->getAnchor() . "-frame";
     }
 
@@ -165,9 +165,10 @@ JAVASCRIPT;
      * Return default 'allow' attribute values
      * @return string (escaped)
      */
-    public function DefaultAllowAttributes(): string {
+    public function DefaultAllowAttributes(): string
+    {
         $allow = $this->config()->get('default_allow_attributes');
-        if(is_array($allow) && $allow !== []) {
+        if (is_array($allow) && $allow !== []) {
             $allow = array_unique($allow);
             $allow_value = htmlentities(implode(" ", $allow));
         } else {
@@ -225,7 +226,8 @@ JAVASCRIPT;
     /**
      * @inheritdoc
      */
-    public function getResponsiveOptions() {
+    public function getResponsiveOptions()
+    {
         return $this->config()->get('responsive_options') ?: [];
     }
 
@@ -236,11 +238,11 @@ JAVASCRIPT;
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        if($this->Width <= 0 || $this->IsFullWidth || $this->IsResponsive) {
+        if ($this->Width <= 0 || $this->IsFullWidth || $this->IsResponsive) {
             $this->Width = "100%";
         }
 
-        if($this->Height <= 0) {
+        if ($this->Height <= 0) {
             $this->Height = $this->getDefaultHeight();
         }
 
@@ -248,7 +250,7 @@ JAVASCRIPT;
          * Translate the URL value provided into a Link model URL
          * and allow to be assigned to record
          */
-        if(($urlId = $this->saveURLtoLink( $this->URLValue )) !== null && ($urlId = $this->saveURLtoLink( $this->URLValue )) !== 0) {
+        if (($urlId = $this->saveURLtoLink($this->URLValue)) !== null && ($urlId = $this->saveURLtoLink($this->URLValue)) !== 0) {
             $this->URLID = $urlId;
         }
     }
@@ -258,9 +260,10 @@ JAVASCRIPT;
      * @param string $urlValue a URL
      * @return int|null the Link model record ID or null if not a value
      */
-    public function saveURLtoLink(string $urlValue = null) : ?int {
+    public function saveURLtoLink(string $urlValue = null): ?int
+    {
 
-        if($urlValue === null || $urlValue === '' || $urlValue === '0') {
+        if ($urlValue === null || $urlValue === '' || $urlValue === '0') {
             // avoid saving a link model that has no URL
             return null;
         }
@@ -276,7 +279,7 @@ JAVASCRIPT;
 
         // Find or create a new Link record
         $link = $this->URL();
-        if(!$link || !$link->exists()) {
+        if (!$link || !$link->exists()) {
             $link = Link::create();
         }
 
@@ -299,9 +302,10 @@ JAVASCRIPT;
     /**
      * Return the height, the configured height or a default height, to ensure one
      */
-    public function getIframeHeight() {
+    public function getIframeHeight()
+    {
         $height = $this->getField('Height');
-        if(!$height) {
+        if (!$height) {
             $height = $this->getDefaultHeight();
         }
 
@@ -311,9 +315,10 @@ JAVASCRIPT;
     /**
      * Return the width or 100% if not set
      */
-    public function getIframeWidth() : string {
+    public function getIframeWidth(): string
+    {
         $width = $this->getField('Width');
-        if(!$width || $this->IsFullWidth || $this->IsResponsive) {
+        if (!$width || $this->IsFullWidth || $this->IsResponsive) {
             $width = "100%";
         }
 
@@ -323,9 +328,10 @@ JAVASCRIPT;
     /**
      * Return the default height or a set height of 400 if not set
      */
-    protected function getDefaultHeight() : string {
+    protected function getDefaultHeight(): string
+    {
         $height = $this->config()->get('default_height');
-        if(!$height) {
+        if (!$height) {
             $height = '400';
         }
 
@@ -336,10 +342,11 @@ JAVASCRIPT;
      * Return the URL as a string value from the Link model
      * This provides some compatibility between previous versions that used the LinkFields to add an iframe src
      */
-    public function getURLAsString() : string {
+    public function getURLAsString(): string
+    {
         $url = "";
         $link = $this->URL();
-        if( $link && $link->exists() ) {
+        if ($link && $link->exists()) {
             $linkURL = $link->getLinkURL();
             if (is_string($linkURL)) {
                 $url = $linkURL;
@@ -355,7 +362,8 @@ JAVASCRIPT;
      * @inheritdoc
      */
     #[\Override]
-    public function getCMSFields() {
+    public function getCMSFields()
+    {
         $fields = parent::getCMSFields();
 
         $fields->removeByName([
@@ -371,7 +379,8 @@ JAVASCRIPT;
         );
 
         $fields->addFieldsToTab(
-            'Root.Main', [
+            'Root.Main',
+            [
                 CheckboxField::create(
                     'IsLazy',
                     _t(self::class. '.LAZY_LOAD', 'Lazy load')
@@ -409,7 +418,7 @@ JAVASCRIPT;
                             self::class . '.RESPONSIVE_DESCRIPTION',
                             'When set, this option will override the width to 100% of the container and maintain aspect ratio'
                         )
-                ),
+                    ),
                 TextField::create(
                     'Width',
                     _t(self::class. '.WIDTH', 'Width')
@@ -448,7 +457,8 @@ JAVASCRIPT;
     /**
      * Return whether lazy load polyfill is enabled, useful in templates
      */
-    public function HasPolyfill(): bool {
+    public function HasPolyfill(): bool
+    {
         return (bool)self::config()->get('load_polyfill');
     }
 

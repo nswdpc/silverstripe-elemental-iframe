@@ -1,18 +1,15 @@
 <?php
 
-namespace  NSWDPC\Elemental\Tests\Iframe;
+namespace NSWDPC\Elemental\Tests\Iframe;
 
 use Codem\Utilities\HTML5\UrlField;
 use gorriecoe\Link\Models\Link;
 use gorriecoe\Link\View\Phone as PhoneView;
-use NSWDPC\InlineLinker\InlineLinkCompositeField;
 use NSWDPC\Elemental\Models\Iframe\ElementIframe;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Folder;
-use SilverStripe\Assets\Image;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\View\Requirements;
@@ -23,7 +20,6 @@ use SilverStripe\View\Requirements;
  */
 class IframeTest extends SapphireTest
 {
-
     /**
      * @inheritdoc
      */
@@ -38,7 +34,8 @@ class IframeTest extends SapphireTest
      * @inheritdoc
      */
     #[\Override]
-    public function setUp() : void {
+    public function setUp(): void
+    {
         parent::setUp();
         Config::modify()->set(
             ElementIframe::class,
@@ -68,7 +65,7 @@ class IframeTest extends SapphireTest
      * @inheritdoc
      */
     #[\Override]
-    public function tearDown() : void
+    public function tearDown(): void
     {
         parent::tearDown();
         TestAssetStore::reset();
@@ -77,9 +74,10 @@ class IframeTest extends SapphireTest
     /**
      * Test iframe element saving
      */
-    public function testIframe(): void {
+    public function testIframe(): void
+    {
 
-        $iframe = $this->objFromFixture( ElementIframe::class, 'standard');
+        $iframe = $this->objFromFixture(ElementIframe::class, 'standard');
 
         // save this URL value
         $url = 'https://example.com/?foo=bar&1=<small>';
@@ -113,7 +111,7 @@ class IframeTest extends SapphireTest
             'src="' . htmlspecialchars($linkURL) . '"'
         ];
 
-        foreach($strings as $string) {
+        foreach ($strings as $string) {
             $this->assertTrue(str_contains((string) $template, $string), "{$string} should appear in the template");
         }
 
@@ -131,8 +129,8 @@ class IframeTest extends SapphireTest
             $css_hash//CSS
         ];
 
-        foreach($hashes as $hash) {
-            $result = array_search( $hash, array_column($assets, 'integrity'), true);
+        foreach ($hashes as $hash) {
+            $result = array_search($hash, array_column($assets, 'integrity'), true);
             $this->assertTrue($result !== false, "Expected integrity hash {$hash} is not present in requirements");
         }
 
@@ -160,9 +158,9 @@ class IframeTest extends SapphireTest
 
         $assets = array_merge($js, $css);
 
-        foreach($hashes as $hash) {
+        foreach ($hashes as $hash) {
             $this->assertFalse(
-                array_search( $hash, array_column($assets, 'integrity'), true ),
+                array_search($hash, array_column($assets, 'integrity'), true),
                 "Hash {$hash} should no longer be in requirements"
             );
         }
@@ -174,7 +172,7 @@ class IframeTest extends SapphireTest
             'width="100%"'
         ];
 
-        foreach($strings as $string) {
+        foreach ($strings as $string) {
             $this->assertFalse(strpos((string) $template, $string), "{$string} should NOT appear in the template");
         }
 
@@ -187,15 +185,16 @@ class IframeTest extends SapphireTest
      * ----
      */
 
-    public function testBCURL(): void {
+    public function testBCURL(): void
+    {
         $expected = 'https://example.org?1=2';
-        $iframe = $this->objFromFixture( ElementIframe::class, 'bcurl');
+        $iframe = $this->objFromFixture(ElementIframe::class, 'bcurl');
         $link = $iframe->URL();
         $this->assertEquals('URL', $link->Type);
 
         $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
-        $this->assertInstanceOf( UrlField::class, $field );
-        $this->assertEquals( $expected, $field->dataValue() );
+        $this->assertInstanceOf(UrlField::class, $field);
+        $this->assertEquals($expected, $field->dataValue());
 
         $iframe->URLValue = $expected;
         $iframe->write();
@@ -204,16 +203,17 @@ class IframeTest extends SapphireTest
         $this->assertEquals($expected, $iframe->getURLAsString());
     }
 
-    public function testBCEmail(): void {
+    public function testBCEmail(): void
+    {
         $value = 'test@example.com';
         $expected = 'mailto:' . $value;
-        $iframe = $this->objFromFixture( ElementIframe::class, 'bcemail');
+        $iframe = $this->objFromFixture(ElementIframe::class, 'bcemail');
         $link = $iframe->URL();
         $this->assertEquals('Email', $link->Type);
 
         $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
-        $this->assertInstanceOf( UrlField::class, $field );
-        $this->assertEquals( $expected, $field->dataValue() );
+        $this->assertInstanceOf(UrlField::class, $field);
+        $this->assertEquals($expected, $field->dataValue());
 
         $iframe->URLValue = $expected;
         $iframe->write();
@@ -222,20 +222,21 @@ class IframeTest extends SapphireTest
         $this->assertEquals($expected, $iframe->getURLAsString());
     }
 
-    public function testBCPhone(): void {
+    public function testBCPhone(): void
+    {
 
-        Config::modify()->set( PhoneView::class, 'default_country', 'AU');
+        Config::modify()->set(PhoneView::class, 'default_country', 'AU');
 
         $value = '+61-400-000-000';
         $expected = 'tel:' . $value;
-        $iframe = $this->objFromFixture( ElementIframe::class, 'bcphone');
+        $iframe = $this->objFromFixture(ElementIframe::class, 'bcphone');
         $link = $iframe->URL();
 
         $this->assertEquals('Phone', $link->Type);
 
         $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
-        $this->assertInstanceOf( UrlField::class, $field );
-        $this->assertEquals( $expected, $field->dataValue() );
+        $this->assertInstanceOf(UrlField::class, $field);
+        $this->assertEquals($expected, $field->dataValue());
 
         try {
             $iframe->URLValue = $value;
@@ -247,15 +248,16 @@ class IframeTest extends SapphireTest
 
     }
 
-    public function testBCSiteTree(): void {
+    public function testBCSiteTree(): void
+    {
         $expected = '/page-test';
-        $iframe = $this->objFromFixture( ElementIframe::class, 'bcsitetree');
+        $iframe = $this->objFromFixture(ElementIframe::class, 'bcsitetree');
         $link = $iframe->URL();
         $this->assertEquals('SiteTree', $link->Type);
 
         $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
-        $this->assertInstanceOf( UrlField::class, $field );
-        $this->assertEquals( $expected, $field->dataValue() );
+        $this->assertInstanceOf(UrlField::class, $field);
+        $this->assertEquals($expected, $field->dataValue());
 
         $iframe->URLValue = $expected;
         $iframe->write();
@@ -264,16 +266,17 @@ class IframeTest extends SapphireTest
         $this->assertEquals($expected, $iframe->getURLAsString());
     }
 
-    public function testBCFile(): void {
+    public function testBCFile(): void
+    {
         $expected = '/' . ASSETS_DIR . '/IframeFileTest/file.jpg';
-        $iframe = $this->objFromFixture( ElementIframe::class, 'bcfile');
+        $iframe = $this->objFromFixture(ElementIframe::class, 'bcfile');
         $link = $iframe->URL();
         $link->File();
         $this->assertEquals('File', $link->Type);
 
         $field = $iframe->getCmsFields()->dataFieldByName('URLValue');
-        $this->assertInstanceOf( UrlField::class, $field );
-        $this->assertEquals( $expected, $field->dataValue() );
+        $this->assertInstanceOf(UrlField::class, $field);
+        $this->assertEquals($expected, $field->dataValue());
 
         $iframe->URLValue = $expected;
         $iframe->write();
