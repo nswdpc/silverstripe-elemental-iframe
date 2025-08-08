@@ -5,4 +5,4 @@ NSWDPC\Elemental\Models\Iframe\ElementIframe:
   load_polyfill: false
   resizer_log: false
   default_allow_attributes:
-      - 'fullscreen'
+    - 'fullscreen'
