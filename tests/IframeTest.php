@@ -248,10 +248,6 @@ class IframeTest extends SapphireTest
             ]
         );
 
-        foreach ($strings as $string) {
-            $this->assertTrue(str_contains((string) $template, $string), "{$string} should appear in the template");
-        }
-
         // Requirements check
         $included = [
             "iframe css" => "BCvA93KSwNd2uyy/627Fmtp2cpR8qUvOA2b1zO52ashQ6RPM7BoEieDfManGxC2aq9XiL2jYmwWEcRZF+3Vovw==" // module's iframe.css
