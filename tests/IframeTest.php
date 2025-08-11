@@ -104,24 +104,24 @@ class IframeTest extends SapphireTest
 
         $dom = $this->getDomDocument($htmlTemplate);
 
-        if($title !== "") {
+        if ($title !== "") {
             $h2 = $dom->getElementsByTagName('h2')[0];
             $this->assertEquals($title, trim((string) $h2->textContent));
         }
 
         $iframe = $dom->getElementsByTagName('iframe')[0];
-        foreach($expectedAttributes as $name => $value) {
+        foreach ($expectedAttributes as $name => $value) {
             $this->assertEquals($value, trim((string) $iframe->getAttribute($name)));
         }
 
-        foreach(array_keys($unexpectedAttributes) as $name) {
+        foreach (array_keys($unexpectedAttributes) as $name) {
             $this->assertFalse($iframe->hasAttribute($name));
         }
 
         $parentNode = $iframe->parentNode;
         $parentClass = $parentNode->getAttribute('class');
         $parentClasses = explode(" ", (string) $parentClass);
-        foreach($expectedParentNodeClasses as $expectedParentNodeClass) {
+        foreach ($expectedParentNodeClasses as $expectedParentNodeClass) {
             $this->assertContains($expectedParentNodeClass, $parentClasses);
         }
     }
