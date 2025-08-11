@@ -263,7 +263,7 @@ JAVASCRIPT;
     public function saveURLtoLink(string $urlValue = null): ?int
     {
 
-        if ($urlValue === null || $urlValue === '' || $urlValue === '0') {
+        if (is_null($urlValue) || $urlValue === '') {
             // avoid saving a link model that has no URL
             return null;
         }
