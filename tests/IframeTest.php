@@ -8,7 +8,7 @@ use gorriecoe\Link\View\Phone as PhoneView;
 use NSWDPC\Elemental\Models\Iframe\ElementIframe;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
