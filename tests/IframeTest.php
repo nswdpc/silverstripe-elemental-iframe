@@ -45,6 +45,9 @@ class IframeTest extends SapphireTest
             ]
         );
 
+        // default no polyfill for lazy loading
+        Config::modify()->set(ElementIframe::class, 'load_polyfill', false);
+
         // Set backend root to /IframeFileTest
         TestAssetStore::activate('IframeFileTest');
 
@@ -71,13 +74,72 @@ class IframeTest extends SapphireTest
         TestAssetStore::reset();
     }
 
-    /**
-     * Test iframe element saving
-     */
-    public function testIframe(): void
+    protected function checkRequirementHashes(array $included = [], array $excluded = []): void
     {
 
+        $backend = Requirements::backend();
+        $js = $backend->getJavascript();
+        $css = $backend->getCSS();
+        $assets = array_merge($js, $css);
+        $hashes = array_column($assets, 'integrity');
+
+        foreach ($included as $includedReason => $includedIntegrityHash) {
+            $this->assertContains($includedIntegrityHash, $hashes, "Expected integrity hash for '{$includedReason}' is not present in requirements");
+        }
+
+        foreach ($excluded as $excludedReason => $excludedIntegrityHash) {
+            $this->assertNotContains($excludedIntegrityHash, $hashes, "Excluded integrity hash for '{$excludedReason}' is present in requirements");
+        }
+    }
+
+    protected function getDomDocument(string $htmlTemplate): \DOMDocument
+    {
+        $doc = new \DOMDocument();
+        $doc->loadHTML($htmlTemplate);
+        return $doc;
+    }
+
+    protected function verifyIframeTemplate(string $htmlTemplate, string $title = "", array $expectedAttributes = [], array $unexpectedAttributes = [], array $expectedParentNodeClasses = []): void
+    {
+
+        $dom = $this->getDomDocument($htmlTemplate);
+
+        if($title !== "") {
+            $h2 = $dom->getElementsByTagName('h2')[0];
+            $this->assertEquals($title, trim($h2->textContent));
+        }
+
+        $iframe = $dom->getElementsByTagName('iframe')[0];
+        foreach($expectedAttributes as $name => $value) {
+            $this->assertEquals($value, trim($iframe->getAttribute($name)));
+        }
+
+        if($unexpectedAttributes !== []) {
+            foreach($unexpectedAttributes as $name => $value) {
+                $this->assertFalse($iframe->hasAttribute($name));
+            }
+        }
+
+        $parentNode = $iframe->parentNode;
+        $parentClass = $parentNode->getAttribute('class');
+        $parentClasses = explode(" ", $parentClass);
+        foreach($expectedParentNodeClasses as $expectedParentNodeClass) {
+            $this->assertContains($expectedParentNodeClass, $parentClasses);
+        }
+    }
+
+    /**
+     * Test standard iframe without lazy loading enabled
+     */
+    public function testIframeStandardNonLazy(): void
+    {
+
+        // no polyfill
+        Config::modify()->set(ElementIframe::class, 'load_polyfill', false);
+
         $iframe = $this->objFromFixture(ElementIframe::class, 'standard');
+
+        $this->assertEquals(0, $iframe->IsLazy);
 
         // save this URL value
         $url = 'https://example.com/?foo=bar&1=<small>';
@@ -92,89 +154,185 @@ class IframeTest extends SapphireTest
         $linkURL = $link->getLinkURL();
         $this->assertEquals($url, $linkURL);
 
+        $this->assertEquals('16x9', $iframe->IsResponsive);
+
         $iframe_width = $iframe->getIframeWidth();
         $this->assertEquals("100%", $iframe_width, "Responsive iframe should be 100% width");
 
         $iframe_height = $iframe->getIframeHeight();
         $this->assertEquals($iframe->Height, $iframe_height, "Iframe should be {$iframe->Height} height");
 
-        $template = $iframe->forTemplate();
+        $this->verifyIframeTemplate(
+            $iframe->forTemplate(),
+            "IFRAME_TITLE",
+            [
+                "class" => "responsive-item",
+                "allow" => "fullscreen",
+                "width" => "100%",
+                "height" => $iframe_height,
+                "title" => "ALT_CONTENT",
+                "src" => $linkURL
+            ],
+            [
+                "loading" => "lazy",
+            ],
+            [
+                "responsive-iframe",
+                "is-16x9",
+            ]
+        );
 
-        $strings = [
-            "is-16x9",
-            'allow="fullscreen"',
-            'loading="lazy"',
-            'width="100%"',
-            "height=\"{$iframe->Height}\"",
-            "<h2>IFRAME_TITLE</h2>",
-            'title="ALT_CONTENT"',
-            'src="' . htmlspecialchars($linkURL) . '"'
+        // Requirements check
+        $included = [
+            "iframe css" => "BCvA93KSwNd2uyy/627Fmtp2cpR8qUvOA2b1zO52ashQ6RPM7BoEieDfManGxC2aq9XiL2jYmwWEcRZF+3Vovw=="
         ];
-
-        foreach ($strings as $string) {
-            $this->assertTrue(str_contains((string) $template, $string), "{$string} should appear in the template");
-        }
-
-        $backend = Requirements::backend();
-
-        $js = $backend->getJavascript();
-        $css = $backend->getCSS();
-
-        $assets = array_merge($js, $css);
-
-        $lazy_load_hash = "sha512-Kq3/MTxphzXJIRDWtrpLhhNnLDPiBXPMKkx/KogMYZO92Geor9j8sJguZ1OozBS+YVmVKo2HEx2gZfGOQBFM8A==";
-        $css_hash = "BCvA93KSwNd2uyy/627Fmtp2cpR8qUvOA2b1zO52ashQ6RPM7BoEieDfManGxC2aq9XiL2jYmwWEcRZF+3Vovw==";
-        $hashes = [
-            $lazy_load_hash,//JS
-            $css_hash//CSS
+        $excluded = [
+            "lazy loading polyfill script" => "sha512-Kq3/MTxphzXJIRDWtrpLhhNnLDPiBXPMKkx/KogMYZO92Geor9j8sJguZ1OozBS+YVmVKo2HEx2gZfGOQBFM8A=="
         ];
-
-        foreach ($hashes as $hash) {
-            $result = array_search($hash, array_column($assets, 'integrity'), true);
-            $this->assertTrue($result !== false, "Expected integrity hash {$hash} is not present in requirements");
-        }
+        $this->checkRequirementHashes($included, $excluded);
 
         $iframe->publishSingle();
 
         $this->assertTrue($iframe->isPublished(), "Iframe is not published");
 
-        // turn off responsive-ness and lazy loading
-        $iframe->IsResponsive = 0;
-        $iframe->IsFullWidth = 0;
-        $iframe->IsLazy = 0;
-        $iframe->Width = 600;
+    }
+
+    /**
+     * Test iframe element with IsLazy enabled and without polyfill (default)
+     */
+    public function testIframeLazyWithoutPolyfill(): void
+    {
+
+        // no polyfill
+        Config::modify()->set(ElementIframe::class, 'load_polyfill', false);
+
+        $iframe = $this->objFromFixture(ElementIframe::class, 'lazyload');
+
+        $this->assertEquals(1, $iframe->IsLazy);
+
+        // save this URL value
+        $url = 'https://example.com/?lazy';
+        $iframe->URLValue = $url;
         $iframe->write();
-        $iframe->publishSingle();
 
-        $this->assertEquals(600, $iframe->getIframeWidth(), "Iframe width should now be 600");
+        // assert the iframe has a link
+        $link = $iframe->URL();
+        $this->assertInstanceOf(Link::class, $link);
+        $this->assertEquals('URL', $link->Type);
 
-        Requirements::clear();
-        $template = $iframe->forTemplate();
+        $linkURL = $link->getLinkURL();
+        $this->assertEquals($url, $linkURL);
 
-        $backend = Requirements::backend();
+        $this->assertEquals('16x9', $iframe->IsResponsive);
 
-        $js = $backend->getJavascript();
-        $css = $backend->getCSS();
+        $iframe_width = $iframe->getIframeWidth();
+        $this->assertEquals("100%", $iframe_width, "Responsive iframe should be 100% width");
 
-        $assets = array_merge($js, $css);
+        $iframe_height = $iframe->getIframeHeight();
+        $this->assertEquals($iframe->Height, $iframe_height, "Iframe should be {$iframe->Height} height");
 
-        foreach ($hashes as $hash) {
-            $this->assertFalse(
-                array_search($hash, array_column($assets, 'integrity'), true),
-                "Hash {$hash} should no longer be in requirements"
-            );
-        }
-
-        // these strings should not appear in the template
-        $strings = [
-            "is-16x9",
-            'loading="lazy"',
-            'width="100%"'
-        ];
+        $this->verifyIframeTemplate(
+            $iframe->forTemplate(),
+            "IFRAME_TITLE_LAZY",
+            [
+                "class" => "responsive-item",
+                "allow" => "fullscreen",
+                "loading" => "lazy",
+                "width" => "100%",
+                "height" => $iframe_height,
+                "title" => "ALT_CONTENT_LAZY",
+                "src" => $linkURL
+            ],
+            [],
+            [
+                "responsive-iframe",
+                "is-16x9",
+            ]
+        );
 
         foreach ($strings as $string) {
-            $this->assertFalse(strpos((string) $template, $string), "{$string} should NOT appear in the template");
+            $this->assertTrue(str_contains((string) $template, $string), "{$string} should appear in the template");
         }
+
+        // Requirements check
+        $included = [
+            "iframe css" => "BCvA93KSwNd2uyy/627Fmtp2cpR8qUvOA2b1zO52ashQ6RPM7BoEieDfManGxC2aq9XiL2jYmwWEcRZF+3Vovw==" // module's iframe.css
+        ];
+        $excluded = [
+            "lazy loading polyfill script" => "sha512-Kq3/MTxphzXJIRDWtrpLhhNnLDPiBXPMKkx/KogMYZO92Geor9j8sJguZ1OozBS+YVmVKo2HEx2gZfGOQBFM8A==" // polyfill
+        ];
+        $this->checkRequirementHashes($included, $excluded);
+
+        $iframe->publishSingle();
+
+        $this->assertTrue($iframe->isPublished(), "Iframe is not published");
+
+    }
+
+    /**
+     * Test iframe element with IsLazy enabled and polyfill enabled
+     */
+    public function testIframeLazyWithPolyfill(): void
+    {
+
+        // load polyfill in requirements
+        Config::modify()->set(ElementIframe::class, 'load_polyfill', true);
+
+        $iframe = $this->objFromFixture(ElementIframe::class, 'lazyload');
+
+        $this->assertEquals(1, $iframe->IsLazy);
+
+        // save this URL value
+        $url = 'https://example.com/?lazy';
+        $iframe->URLValue = $url;
+        $iframe->write();
+
+        // assert the iframe has a link
+        $link = $iframe->URL();
+        $this->assertInstanceOf(Link::class, $link);
+        $this->assertEquals('URL', $link->Type);
+
+        $linkURL = $link->getLinkURL();
+        $this->assertEquals($url, $linkURL);
+
+        $this->assertEquals('16x9', $iframe->IsResponsive);
+
+        $iframe_width = $iframe->getIframeWidth();
+        $this->assertEquals("100%", $iframe_width, "Responsive iframe should be 100% width");
+
+        $iframe_height = $iframe->getIframeHeight();
+        $this->assertEquals($iframe->Height, $iframe_height, "Iframe should be {$iframe->Height} height");
+
+        $this->verifyIframeTemplate(
+            $iframe->forTemplate(),
+            "IFRAME_TITLE_LAZY",
+            [
+                "class" => "responsive-item",
+                "allow" => "fullscreen",
+                "loading" => "lazy",
+                "width" => "100%",
+                "height" => $iframe_height,
+                "title" => "ALT_CONTENT_LAZY",
+                "src" => $linkURL
+            ],
+            [],
+            [
+                "responsive-iframe",
+                "is-16x9",
+            ]
+        );
+
+        // Requirements check
+        $included = [
+            "iframe css" => "BCvA93KSwNd2uyy/627Fmtp2cpR8qUvOA2b1zO52ashQ6RPM7BoEieDfManGxC2aq9XiL2jYmwWEcRZF+3Vovw==",
+            "lazy loading polyfill script" => "sha512-Kq3/MTxphzXJIRDWtrpLhhNnLDPiBXPMKkx/KogMYZO92Geor9j8sJguZ1OozBS+YVmVKo2HEx2gZfGOQBFM8A==" // polyfill
+        ];
+        $excluded = [];
+        $this->checkRequirementHashes($included, $excluded);
+
+        $iframe->publishSingle();
+
+        $this->assertTrue($iframe->isPublished(), "Iframe is not published");
 
     }
 
