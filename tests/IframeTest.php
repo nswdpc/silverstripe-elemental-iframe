@@ -119,7 +119,7 @@ class IframeTest extends SapphireTest
         }
 
         $parentNode = $iframe->parentNode;
-        if($parentNode->nodeName == 'noscript') {
+        if ($parentNode->nodeName == 'noscript') {
             // skip noscript
             $parentNode = $parentNode->parentNode;
         }
