@@ -250,7 +250,8 @@ JAVASCRIPT;
          * Translate the URL value provided into a Link model URL
          * and allow to be assigned to record
          */
-        if (($urlId = $this->saveURLtoLink($this->URLValue)) !== null && ($urlId = $this->saveURLtoLink($this->URLValue)) !== 0) {
+        $urlId = $this->saveURLtoLink($this->URLValue);
+        if (!is_null($urlId)) {
             $this->URLID = $urlId;
         }
     }
