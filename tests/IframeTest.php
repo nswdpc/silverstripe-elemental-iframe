@@ -119,6 +119,10 @@ class IframeTest extends SapphireTest
         }
 
         $parentNode = $iframe->parentNode;
+        if($parentNode->nodeName == 'noscript') {
+            // skip noscript
+            $parentNode = $parentNode->parentNode;
+        }
         $parentClass = $parentNode->getAttribute('class');
         $parentClasses = explode(" ", (string) $parentClass);
         foreach ($expectedParentNodeClasses as $expectedParentNodeClass) {
