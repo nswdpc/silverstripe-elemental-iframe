@@ -12,12 +12,10 @@
     "authors": [
         {
             "name": "Mark Taylor",
-            "homepage": "https://dpc.nsw.gov.au",
-            "role": "Bon Vivant"
+            "role": "Developer"
         },
         {
             "name": "James Ellis",
-            "homepage": "https://dpc.nsw.gov.au",
             "role": "Developer"
         }
     ],
@@ -27,8 +25,14 @@
         "gorriecoe/silverstripe-link": "^1.5"
     },
     "require-dev": {
+        "cambis/silverstripe-rector": "^2",
+        "cambis/silverstan": "^2",
+        "friendsofphp/php-cs-fixer": "^3",
+        "nswdpc/ci-files": "dev-v-4",
         "phpunit/phpunit": "^9.5",
-        "squizlabs/php_codesniffer": "^3.0"
+        "phpstan/phpstan": "^2",
+        "phpstan/phpstan-phpunit": "^2",
+        "rector/rector": "^2"
     },
     "autoload": {
         "psr-4": {
@@ -44,5 +48,13 @@
         "expose": [
             "client/static"
         ]
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "silverstripe/vendor-plugin": true,
+            "silverstripe/recipe-plugin": true,
+            "phpstan/extension-installer": true
+        }
     }
 }
