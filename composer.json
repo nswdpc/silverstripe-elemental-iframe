@@ -22,7 +22,7 @@
     "require": {
         "dnadesign/silverstripe-elemental": "^6",
         "codem/silverstripe-html5-inputs": "^2",
-        "gorriecoe/silverstripe-link": "dev-ss6"
+        "nswdpc/silverstripe-link": "^2"
     },
     "require-dev": {
         "cambis/silverstripe-rector": "^2",
@@ -34,12 +34,6 @@
         "phpstan/phpstan-phpunit": "^2",
         "rector/rector": "^2"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/nswdpc/silverstripe-link.git"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "NSWDPC\\Elemental\\Models\\Iframe\\": [
