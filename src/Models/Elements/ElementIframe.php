@@ -12,7 +12,6 @@ use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Permission;
 use SilverStripe\View\Requirements;
-use SilverStripe\View\ViewableData;
 
 /**
  * Iframe content block
@@ -67,7 +66,7 @@ class ElementIframe extends BaseElement implements PermissionProvider
 
     private static string $title = 'Iframe';
 
-    private static string $description = 'Display content in an HTML iframe tag';
+    private static string $class_description = 'Display content in an HTML iframe tag';
 
     private static array $responsive_options = [
         '16x9' => '16x9',
@@ -93,7 +92,7 @@ class ElementIframe extends BaseElement implements PermissionProvider
      * Apply requirements when templating
      */
     #[\Override]
-    public function forTemplate($holder = true)
+    public function forTemplate($holder = true): string
     {
 
         // Responsive CSS
@@ -261,7 +260,7 @@ JAVASCRIPT;
      * @param string $urlValue a URL
      * @return int|null the Link model record ID or null if not a value
      */
-    public function saveURLtoLink(string $urlValue = null): ?int
+    public function saveURLtoLink(?string $urlValue = null): ?int
     {
 
         if (is_null($urlValue) || $urlValue === '') {
@@ -351,8 +350,6 @@ JAVASCRIPT;
             $linkURL = $link->getLinkURL();
             if (is_string($linkURL)) {
                 $url = $linkURL;
-            } elseif ($linkURL instanceof ViewableData) {
-                $url = $linkURL->forTemplate();
             }
         }
 
