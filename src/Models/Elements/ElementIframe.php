@@ -260,7 +260,7 @@ JAVASCRIPT;
      * @param string $urlValue a URL
      * @return int|null the Link model record ID or null if not a value
      */
-    public function saveURLtoLink(string $urlValue = null): ?int
+    public function saveURLtoLink(?string $urlValue = null): ?int
     {
 
         if (is_null($urlValue) || $urlValue === '') {
