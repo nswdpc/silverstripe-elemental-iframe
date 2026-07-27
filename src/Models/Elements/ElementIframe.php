@@ -249,7 +249,8 @@ JAVASCRIPT;
          * Translate the URL value provided into a Link model URL
          * and allow to be assigned to record
          */
-        if (($urlId = $this->saveURLtoLink($this->URLValue)) !== null && ($urlId = $this->saveURLtoLink($this->URLValue)) !== 0) {
+        $urlId = $this->saveURLtoLink($this->URLValue);
+        if (!is_null($urlId)) {
             $this->URLID = $urlId;
         }
     }
@@ -262,7 +263,7 @@ JAVASCRIPT;
     public function saveURLtoLink(string $urlValue = null): ?int
     {
 
-        if (in_array($urlValue, [null, '', '0'], true)) {
+        if (is_null($urlValue) || $urlValue === '') {
             // avoid saving a link model that has no URL
             return null;
         }
