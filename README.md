@@ -1,15 +1,15 @@
-# Elemental Iframe content block
+# Iframe content block
 
-Provides an iframe element that can be added by content editors to pages and models with an ElementalArea.
+Provides an iframe content block that can be added by content editors to pages and models with an ElementalArea.
 
 ### Features
 
-+ Supports lazy loading (HTML5 and via JS polyfill)
++ Supports lazy loading (HTML5 and via an optional JS polyfill)
 + Provides alternate content field for assistive technologies
 + Width / Height options with full width checkbox
 + Configurable default height
 + Responsive 16x9 and 4x3 options (useful for video embeds)
-+ Provides permissions to restrict who can add,edit and delete iframe content elements
++ Provides permissions to restrict who can add, edit and delete iframe content elements
 
 ## Requirements
 
@@ -17,7 +17,7 @@ See [composer.json](./composer.json)
 
 ## Installation
 
-```
+```sh
 composer require nswdpc/silverstripe-elemental-iframe
 ```
 
@@ -42,6 +42,10 @@ See [config.yml](./_config/config.yml) for module configuration values
 We welcome bug reports, pull requests and feature requests on the Github Issue tracker for this project.
 
 Please review the [code of conduct](./code-of-conduct.md) prior to opening a new issue.
+
+## Security
+
+If you have found a security issue with this module, please email digital[@]dpc.nsw.gov.au in the first instance, detailing your findings.
 
 ## Development and contribution
 
