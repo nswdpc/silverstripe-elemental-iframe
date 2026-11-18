@@ -5,12 +5,15 @@ namespace NSWDPC\Elemental\Models\Iframe;
 use Codem\Utilities\HTML5\UrlField;
 use DNADesign\Elemental\Models\BaseElement;
 use gorriecoe\Link\Models\Link;
+use InvalidArgumentException;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\CheckboxField;
+use SilverStripe\ORM\DB;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Permission;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
 
 /**
@@ -43,7 +46,7 @@ class ElementIframe extends BaseElement implements PermissionProvider
     ];
 
     private static array $has_one = [
-        'URL' => Link::class,
+        'URL' => Link::class, // @deprecated
     ];
 
     private static array $db = [
@@ -53,7 +56,8 @@ class ElementIframe extends BaseElement implements PermissionProvider
         'IsResponsive' =>  'Varchar(8)',
         'Width' => 'Varchar(8)',
         'Height' => 'Varchar(8)',
-        'AlternateContent' => 'Text'
+        'AlternateContent' => 'Text',
+        'URLValue' => 'Text'
     ];
 
     private static array $defaults = [
@@ -244,59 +248,45 @@ JAVASCRIPT;
         if ($this->Height <= 0) {
             $this->Height = $this->getDefaultHeight();
         }
+    }
 
-        /**
-         * Translate the URL value provided into a Link model URL
-         * and allow to be assigned to record
-         */
-        $urlId = $this->saveURLtoLink($this->URLValue);
-        if (!is_null($urlId)) {
-            $this->URLID = $urlId;
+    /**
+     * Handle migration of URLs on build, draft stage
+     */
+    public function requireDefaultRecords()
+    {
+        try {
+            self::migrateUrlValues();
+        } catch (\Exception $exception) {
+            DB::alteration_message("Error:" . $exception->getMessage(), "error");
         }
     }
 
     /**
-     * Given a string URL, save it to the current Link model as an external URL value
-     * @param string $urlValue a URL
-     * @return int|null the Link model record ID or null if not a value
+     * Migrate URL values
      */
-    public function saveURLtoLink(?string $urlValue = null): ?int
+    public static function migrateUrlValues(): int
     {
-
-        if (is_null($urlValue) || $urlValue === '') {
-            // avoid saving a link model that has no URL
-            return null;
-        }
-
-        // Assign title for link record
-        $title = _t(
-            self::class . ".LINK_TITLE",
-            "Link for iframe element {title}",
-            [
-                'title' => $this->exists() ? "(#{$this->ID})" : "(new)"
-            ]
+        return Versioned::withVersionedMode(
+            function () {
+                $count = 0;
+                Versioned::set_stage(Versioned::DRAFT);
+                $iframes = ElementIframe::get()->exclude(['URLID' => 0]);
+                foreach($iframes as $iframe) {
+                    $link = $iframe->URL();
+                    if($link && $link->isInDB()) {
+                        DB::alteration_message("Migrating URL for iframe #{$iframe->ID}", "changed");
+                        // migrate to value field
+                        $iframe->URLValue = $link->getLinkURL();
+                        $iframe->URLID = 0;
+                        $iframe->write();
+                        DB::alteration_message("Migrated URL for iframe #{$iframe->ID}", "changed");
+                        $count++;
+                    }
+                }
+                return $count;
+            }
         );
-
-        // Find or create a new Link record
-        $link = $this->URL();
-        if (!$link || !$link->exists()) {
-            $link = Link::create();
-        }
-
-        // Save values as external URL type
-        $link->Type = "URL";
-        $link->Title = $title;
-        $link->Email = "";
-        $link->Phone = "";
-        $link->FileID = 0;
-        $link->SiteTreeID = 0;
-        $link->Anchor = null;
-        $link->OpenInNewWindow = 0;
-        $link->SelectedStyle = "";
-        $link->URL = $urlValue;
-
-        $id = $link->write();
-        return is_int($id) ? $id : null;
     }
 
     /**
@@ -341,6 +331,7 @@ JAVASCRIPT;
     /**
      * Return the URL as a string value from the Link model
      * This provides some compatibility between previous versions that used the LinkFields to add an iframe src
+     * @deprecated will be removed, use URLValue value instead
      */
     public function getURLAsString(): string
     {

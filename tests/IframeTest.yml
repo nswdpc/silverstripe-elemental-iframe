@@ -14,22 +14,6 @@ gorriecoe\Link\Models\Link:
     Type: 'URL'
     URL: 'https://example.org?1=2'
     Title: 'URL example'
-  email:
-    Type: 'Email'
-    Email: 'test@example.com'
-    Title: 'Email example'
-  phone:
-    Type: 'Phone'
-    Phone: '+61 400 000 000'
-    Title: 'Phone example'
-  sitetree:
-    Type: 'SiteTree'
-    SiteTreeID: '=>SilverStripe\CMS\Model\SiteTree.page1'
-    Title: 'SiteTree example'
-  file:
-    Type: 'File'
-    FileID: '=>SilverStripe\Assets\File.asset1'
-    Title: 'File example'
 NSWDPC\Elemental\Models\Iframe\ElementIframe:
   standard:
     Title: 'IFRAME_TITLE'
@@ -60,43 +44,3 @@ NSWDPC\Elemental\Models\Iframe\ElementIframe:
     Height: 200
     AlternateContent: 'ALT_CONTENT'
     URL: '=>gorriecoe\Link\Models\Link.url'
-  bcemail:
-    Title: 'BC Email'
-    ShowTitle: 1
-    IsLazy: 0
-    IsFullWidth: 1
-    IsResponsive: '16x9'
-    Width: 300
-    Height: 200
-    AlternateContent: 'ALT_CONTENT'
-    URL: '=>gorriecoe\Link\Models\Link.email'
-  bcphone:
-    Title: 'BC Phone'
-    ShowTitle: 1
-    IsLazy: 0
-    IsFullWidth: 1
-    IsResponsive: '16x9'
-    Width: 300
-    Height: 200
-    AlternateContent: 'ALT_CONTENT'
-    URL: '=>gorriecoe\Link\Models\Link.phone'
-  bcsitetree:
-    Title: 'BC SiteTree'
-    ShowTitle: 1
-    IsLazy: 0
-    IsFullWidth: 1
-    IsResponsive: '16x9'
-    Width: 300
-    Height: 200
-    AlternateContent: 'ALT_CONTENT'
-    URL: '=>gorriecoe\Link\Models\Link.sitetree'
-  bcfile:
-    Title: 'BC File'
-    ShowTitle: 1
-    IsLazy: 0
-    IsFullWidth: 1
-    IsResponsive: '16x9'
-    Width: 300
-    Height: 200
-    AlternateContent: 'ALT_CONTENT'
-    URL: '=>gorriecoe\Link\Models\Link.file'
