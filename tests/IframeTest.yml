@@ -1,14 +1,3 @@
-SilverStripe\Assets\File:
-  asset1:
-    Title: 'File test'
-    FileFilename: 'file.jpg'
-    FileHash: '55b443b60176235ef09801153cca4e6da7494a0c'
-    Name: 'file.jpg'
-SilverStripe\CMS\Model\SiteTree:
-  page1:
-    Title: 'Page Test'
-    URLSegment: 'page-test'
-    ParentID: 0
 gorriecoe\Link\Models\Link:
   url:
     Type: 'URL'
