@@ -30,6 +30,7 @@ use SilverStripe\View\Requirements;
  * @property ?string $AlternateContent
  * @property int $URLID
  * @method \gorriecoe\Link\Models\Link URL()
+ * @property ?string $URLValue
  */
 class ElementIframe extends BaseElement implements PermissionProvider
 {
@@ -173,12 +174,10 @@ JAVASCRIPT;
         $allow = $this->config()->get('default_allow_attributes');
         if (is_array($allow) && $allow !== []) {
             $allow = array_unique($allow);
-            $allow_value = htmlentities(implode(" ", $allow));
-        } else {
-            $allow_value = "";
+            return htmlentities(implode(" ", $allow));
         }
 
-        return $allow_value;
+        return "";
     }
 
     /**
@@ -268,7 +267,7 @@ JAVASCRIPT;
     public static function migrateUrlValues(): int
     {
         return Versioned::withVersionedMode(
-            function () {
+            function (): int {
                 $count = 0;
                 Versioned::set_stage(Versioned::DRAFT);
                 $iframes = ElementIframe::get()->exclude(['URLID' => 0]);
@@ -284,6 +283,7 @@ JAVASCRIPT;
                         $count++;
                     }
                 }
+
                 return $count;
             }
         );
@@ -296,7 +296,7 @@ JAVASCRIPT;
     {
         $height = $this->getField('Height');
         if (!$height) {
-            $height = $this->getDefaultHeight();
+            return $this->getDefaultHeight();
         }
 
         return $height;
@@ -309,7 +309,7 @@ JAVASCRIPT;
     {
         $width = $this->getField('Width');
         if (!$width || $this->IsFullWidth || $this->IsResponsive) {
-            $width = "100%";
+            return "100%";
         }
 
         return $width;
@@ -322,7 +322,7 @@ JAVASCRIPT;
     {
         $height = $this->config()->get('default_height');
         if (!$height) {
-            $height = '400';
+            return '400';
         }
 
         return $height;
