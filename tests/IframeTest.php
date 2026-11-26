@@ -6,8 +6,6 @@ use gorriecoe\Link\Models\Link;
 use NSWDPC\Elemental\Models\Iframe\ElementIframe;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ORM\DataObject;
-use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\View\Requirements;
 
 /**

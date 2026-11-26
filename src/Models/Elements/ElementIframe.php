@@ -5,7 +5,6 @@ namespace NSWDPC\Elemental\Models\Iframe;
 use Codem\Utilities\HTML5\UrlField;
 use DNADesign\Elemental\Models\BaseElement;
 use gorriecoe\Link\Models\Link;
-use InvalidArgumentException;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
@@ -271,9 +270,9 @@ JAVASCRIPT;
                 $count = 0;
                 Versioned::set_stage(Versioned::DRAFT);
                 $iframes = ElementIframe::get()->exclude(['URLID' => 0]);
-                foreach($iframes as $iframe) {
+                foreach ($iframes as $iframe) {
                     $link = $iframe->URL();
-                    if($link && $link->isInDB()) {
+                    if ($link && $link->isInDB()) {
                         DB::alteration_message("Migrating URL for iframe #{$iframe->ID}", "changed");
                         // migrate to value field
                         $iframe->URLValue = $link->getLinkURL();
