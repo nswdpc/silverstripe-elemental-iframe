@@ -250,6 +250,7 @@ JAVASCRIPT;
 
     /**
      * Handle migration of URLs on build, draft stage
+     * @phpstan-ignore silverstan.requiredParentCall
      */
     public function requireDefaultRecords()
     {
