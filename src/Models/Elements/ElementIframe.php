@@ -8,10 +8,8 @@ use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\CheckboxField;
-use SilverStripe\ORM\DB;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Permission;
-use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
 
 /**
