@@ -4,7 +4,6 @@ namespace NSWDPC\Elemental\Models\Iframe;
 
 use Codem\Utilities\HTML5\UrlField;
 use DNADesign\Elemental\Models\BaseElement;
-use gorriecoe\Link\Models\Link;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\DropdownField;
@@ -27,8 +26,6 @@ use SilverStripe\View\Requirements;
  * @property ?string $Width
  * @property ?string $Height
  * @property ?string $AlternateContent
- * @property int $URLID
- * @method \gorriecoe\Link\Models\Link URL()
  * @property ?string $URLValue
  */
 class ElementIframe extends BaseElement implements PermissionProvider
@@ -43,10 +40,6 @@ class ElementIframe extends BaseElement implements PermissionProvider
 
     private static array $default_allow_attributes = [
         'fullscreen'
-    ];
-
-    private static array $has_one = [
-        'URL' => Link::class, // @deprecated
     ];
 
     private static array $db = [
@@ -249,47 +242,6 @@ JAVASCRIPT;
     }
 
     /**
-     * Handle migration of URLs on build, draft stage
-     * @phpstan-ignore silverstan.requiredParentCall
-     */
-    public function requireDefaultRecords()
-    {
-        try {
-            self::migrateUrlValues();
-        } catch (\Exception $exception) {
-            DB::alteration_message("Error:" . $exception->getMessage(), "error");
-        }
-    }
-
-    /**
-     * Migrate URL values
-     */
-    public static function migrateUrlValues(): int
-    {
-        return Versioned::withVersionedMode(
-            function (): int {
-                $count = 0;
-                Versioned::set_stage(Versioned::DRAFT);
-                $iframes = ElementIframe::get()->exclude(['URLID' => 0]);
-                foreach ($iframes as $iframe) {
-                    $link = $iframe->URL();
-                    if ($link && $link->isInDB()) {
-                        DB::alteration_message("Migrating URL for iframe #{$iframe->ID}", "changed");
-                        // migrate to value field
-                        $iframe->URLValue = $link->getLinkURL();
-                        $iframe->URLID = 0;
-                        $iframe->write();
-                        DB::alteration_message("Migrated URL for iframe #{$iframe->ID}", "changed");
-                        $count++;
-                    }
-                }
-
-                return $count;
-            }
-        );
-    }
-
-    /**
      * Return the height, the configured height or a default height, to ensure one
      */
     public function getIframeHeight()
@@ -329,25 +281,6 @@ JAVASCRIPT;
     }
 
     /**
-     * Return the URL as a string value from the Link model
-     * This provides some compatibility between previous versions that used the LinkFields to add an iframe src
-     * @deprecated will be removed, use URLValue value instead
-     */
-    public function getURLAsString(): string
-    {
-        $url = "";
-        $link = $this->URL();
-        if ($link && $link->exists()) {
-            $linkURL = $link->getLinkURL();
-            if (is_string($linkURL)) {
-                $url = $linkURL;
-            }
-        }
-
-        return $url;
-    }
-
-    /**
      * @inheritdoc
      */
     #[\Override]
@@ -355,14 +288,9 @@ JAVASCRIPT;
     {
         $fields = parent::getCMSFields();
 
-        $fields->removeByName([
-            'URLID'
-        ]);
-
         $urlField = UrlField::create(
             'URLValue',
-            _t(self::class. '.URL', 'The URL to use as the iframe source'),
-            $this->getURLAsString()
+            _t(self::class. '.URL', 'The URL to use as the iframe source')
         )->setDescription(
             _t(self::class. '.URL_DESCRIPTION', 'Pages loaded over https will require a https:// URL'),
         );
