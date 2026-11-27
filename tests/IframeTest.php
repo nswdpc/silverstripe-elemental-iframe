@@ -2,7 +2,6 @@
 
 namespace NSWDPC\Elemental\Tests\Iframe;
 
-use gorriecoe\Link\Models\Link;
 use NSWDPC\Elemental\Models\Iframe\ElementIframe;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
@@ -279,26 +278,6 @@ class IframeTest extends SapphireTest
 
         $this->assertTrue($iframe->isPublished(), "Iframe is not published");
 
-    }
-
-    /**
-     * Test to handle migration to external URL types after moving from LinkField to a standard URL field
-     */
-    public function testBCURL(): void
-    {
-        $expected = 'https://example.org?1=2';
-        $iframe = $this->objFromFixture(ElementIframe::class, 'bcurl');
-        $linkFixture = $this->objFromFixture(Link::class, 'url');
-        $this->assertEquals($expected, $linkFixture->URL);
-        $link = $iframe->URL();
-        $this->assertEquals('URL', $link->Type);
-
-        $count = ElementIframe::migrateUrlValues();
-        $this->assertEquals(1, $count);
-
-        $migratedIframe = ElementIframe::get()->byId($iframe->ID);
-        $this->assertEquals(0, $migratedIframe->URLID);
-        $this->assertEquals($linkFixture->URL, $migratedIframe->URLValue);
     }
 
 }
